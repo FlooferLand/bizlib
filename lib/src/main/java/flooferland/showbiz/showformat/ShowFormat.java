@@ -15,16 +15,27 @@ import java.util.zip.GZIPInputStream;
 
 // TODO: Add more error handling: Check if the version of the file matches (and exists), etc
 
-public record ShowFormat(ShowBlock signal, ShowBlock audio, ShowBlock video) {
+public class ShowFormat {
+    public final @Nonnull ShowBlock signal;
+    public final @Nonnull ShowBlock audio;
+    public final @Nullable ShowBlock video;
+
+    private ShowFormat(@Nonnull ShowBlock signal, @Nonnull ShowBlock audio, @Nullable ShowBlock video) {
+        this.signal = signal;
+        this.audio = audio;
+        this.video = video;
+    }
+    
     /** Parses the binary intermediate format and returns a new ShowFormat */
-    public static @Nonnull ShowFormat fromIntermediate(InputStream inputStream) throws Exception {
+    public static @Nullable ShowFormat fromIntermediate(InputStream inputStream) throws Exception {
         // Uncompressed and reading the data
         var stream = new GZIPInputStream(inputStream);
         
         // File format header
         String formatHeader = new String(stream.readNBytes(8), StandardCharsets.UTF_8);
         if (!formatHeader.equals("SHOWBIN\0")) {
-            throw new Exception(String.format("ERROR: File header \"%s\" doesn't match the format!", formatHeader));
+            System.err.println(String.format("ERROR: File header \"%s\" doesn't match the format!", formatHeader));
+            return null;
         }
         
         // File metadata
@@ -33,38 +44,50 @@ public record ShowFormat(ShowBlock signal, ShowBlock audio, ShowBlock video) {
         stream.skipNBytes(6);
         
         // Parsing
-        ShowBlock signal = null;
-        ShowBlock audio = null;
-        ShowBlock video = null;
-        for (int i = 0; i < 3; i++) {
+        @Nonnull ShowBlock signal = null;
+        @Nonnull ShowBlock audio = null;
+        @Nullable ShowBlock video = null;
+        for (int i = 0; i < 2; i++) {
             // First block header
             byte[] header = stream.readNBytes(DataConverter.identBase.length);
             if (!Arrays.equals(header, DataConverter.identBase)) {
-                throw new Exception(String.format("ERROR: Block header \"%s\" doesn't match the format.\nThe length specified in the header of the last section might've been wrong.", new String(header, StandardCharsets.UTF_8)));
+                System.err.println(String.format("ERROR: Block header \"%s\" doesn't match the format.\nThe length specified in the header of the last section might've been wrong.", new String(header, StandardCharsets.UTF_8)));
+                return null;
             }
 
             // First block id
             int blockIdBytes = (int) stream.read();
             Ident blockId = Ident.fromHex(blockIdBytes);
             if (blockId == null) {
-                throw new Exception(String.format(
+                System.err.println(String.format(
                         "Block ID doesn't match any known ID: %s\nExamples:\n- Signal section ID: %s\n- Audio section ID: %s\n- Video section ID: %s",
                         Util.toHexString(blockIdBytes),
                         Util.toHexString(Ident.signalByte),
                         Util.toHexString(Ident.audioByte),
                         Util.toHexString(Ident.videoByte)
                 ));
+                return null;
             }
 
             // Block length
             byte[] blockLengthBytes = stream.readNBytes(4);
             int blockLength = ByteBuffer.wrap(blockLengthBytes).getInt();
             stream.skipNBytes(4);
+            
+            System.out.printf("%s | %s%n", Util.hexArrayToString(blockLengthBytes), Util.hexArrayToChars(blockLengthBytes));
 
             // Reading the data
-            byte[] data = stream.readNBytes(blockLength);
-            if (data == null)
-                throw new Exception("ERROR: Data is null");
+            byte[] data = null;
+            if (stream.available() == 1) {
+                data = stream.readNBytes(blockLength);
+                if (data == null) {
+                    System.err.println("ERROR: Data is null");
+                    return null;
+                }
+                if (stream.available() == 1) {
+                    stream.skipNBytes(1);
+                }
+            }
             
             // Adding the block
             switch (blockId) {
@@ -75,13 +98,21 @@ public record ShowFormat(ShowBlock signal, ShowBlock audio, ShowBlock video) {
                     audio = new ShowBlock(blockId, data);
                     break;
                 case Video:
-                    video = new ShowBlock(blockId, data);
+                    if (data != null) {
+                        video = new ShowBlock(blockId, data);
+                    } else {
+                        video = null;
+                    }
                     break;
             }
             System.out.printf("Finished reading BlockID '%s'%n%n", blockId);
         }
         
         // Returning
+        if (signal == null || audio == null) {
+            System.err.println("Signal/audio data is null for an unknown reason");
+            return null;
+        }
         return new ShowFormat(signal, audio, video);
     }
 }

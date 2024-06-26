@@ -1,5 +1,6 @@
 package flooferland.showbiz.showformat;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HexFormat;
 
@@ -21,12 +22,27 @@ public class Util {
     public static String toHexString(int num) {
         return "0x" + Integer.toHexString(num).toUpperCase();
     }
-    
+
     public static String hexArrayToString(byte[] hex) {
         StringBuilder builder = new StringBuilder();
         builder.append('[');
         for (int i = 0; i < hex.length; i++) {
             builder.append(toHexString(hex[i]));
+            if (i+1 < hex.length) {
+                builder.append(", ");
+            }
+        }
+        builder.append(']');
+        return builder.toString();
+    }
+    
+    public static String hexArrayToChars(byte[] hex) {
+        StringBuilder builder = new StringBuilder();
+        builder.append('[');
+        for (int i = 0; i < hex.length; i++) {
+            if (i+1 < hex.length) {
+                builder.append(ByteBuffer.wrap(new byte[] { hex[i], hex[i+1] }).getChar());
+            }
             if (i+1 < hex.length) {
                 builder.append(", ");
             }

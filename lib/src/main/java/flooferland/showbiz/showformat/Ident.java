@@ -1,31 +1,33 @@
 package flooferland.showbiz.showformat;
 
-import static flooferland.showbiz.showformat.DataConverter.makeIdent;
+import javax.annotation.Nullable;
 
 public enum Ident {
     Signal,
     Audio,
     Video;
 
-    public static final byte[] signalBytes = makeIdent(new byte[] { 0x1A, /* Reserved */ 0x00 });
-    public static final byte[] audioBytes  = makeIdent(new byte[] { 0x2A, /* Reserved */ 0x00 });
-    public static final byte[] videoBytes  = makeIdent(new byte[] { 0x3A, /* Reserved */ 0x00 });
+    public static final int signalByte = 0xA0;
+    public static final int audioByte = 0xB0;
+    public static final int videoByte = 0xC0;
 
-    public byte[] toBytes() {
+    public int toHex() {
         return switch (this) {
-            case Ident.Signal -> signalBytes;
-            case Ident.Audio  -> audioBytes;
-            case Ident.Video  -> videoBytes;
+            case Ident.Signal -> signalByte;
+            case Ident.Audio  -> audioByte;
+            case Ident.Video  -> videoByte;
         };
     }
     
-    public static Ident fromBytes(byte[] bytes) {
-        if (bytes == signalBytes) {
+    public static @Nullable Ident fromHex(int b) {
+        if (b == signalByte) {
             return Ident.Signal;
-        } else if (bytes == audioBytes) {
+        } else if (b == audioByte) {
             return Ident.Audio;
-        } else {
+        } else if (b == videoByte) {
             return Ident.Video;
         }
+        
+        return null;
     }
 }

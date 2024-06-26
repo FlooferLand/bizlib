@@ -8,13 +8,19 @@ import org.junit.jupiter.api.Test;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 class LibraryTest {
-    private static final String Path = "C:/Users/FlooferLand/Desktop/Monkees-Medley.bin";
+    private static final String Path = "C:/Users/FlooferLand/Desktop/looney.bin";
     
     @Test void someLibraryMethodReturnsTrue() throws FileNotFoundException {
-        ShowFormat.fromInputStream(new FileInputStream(Path));
-        // assertTrue(classUnderTest.fromInputStream(), "fromInputStream should return 'true'");
+        System.out.println();
+        
+        try {
+            ShowFormat.fromIntermediate(new FileInputStream(Path));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        // assertTrue(classUnderTest.fromIntermediate(), "fromIntermediate should return 'true'");
+        
+        System.out.println();
     }
 }

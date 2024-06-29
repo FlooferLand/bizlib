@@ -13,6 +13,10 @@ plugins {
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
+    
+    maven {
+        url = "https://mvnrepository.com/artifact/org.apache.commons/commons-compress"
+    }
 }
 
 dependencies {
@@ -20,6 +24,8 @@ dependencies {
     testImplementation libs.junit.jupiter
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    implementation 'org.apache.commons:commons-compress:1.26.2'
 
     // This dependency is exported to consumers, that is to say found on their compile classpath.
     api libs.commons.math3

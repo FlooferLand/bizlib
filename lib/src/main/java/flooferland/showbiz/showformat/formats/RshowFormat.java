@@ -1,7 +1,7 @@
 package flooferland.showbiz.showformat.formats;
 
 import flooferland.showbiz.showformat.IShowFormat;
-import flooferland.showbiz.showformat.ShowData;
+import flooferland.showbiz.showformat.data.ShowData;
 
 import java.io.*;
 import java.nio.ByteBuffer;

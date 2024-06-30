@@ -1,5 +1,7 @@
 package flooferland.showbiz.showformat;
 
+import flooferland.showbiz.showformat.data.ShowData;
+
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;

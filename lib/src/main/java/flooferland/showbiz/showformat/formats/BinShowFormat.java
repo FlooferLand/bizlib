@@ -1,6 +1,7 @@
 package flooferland.showbiz.showformat.formats;
 
 import flooferland.showbiz.showformat.*;
+import flooferland.showbiz.showformat.data.ShowData;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

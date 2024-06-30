@@ -1,5 +1,6 @@
 package flooferland.showbiz.showformat;
 
+import flooferland.showbiz.showformat.data.ShowData;
 import flooferland.showbiz.showformat.formats.RshowFormat;
 import flooferland.showbiz.showformat.formats.ZshowFormat;
 import org.junit.jupiter.api.Test;

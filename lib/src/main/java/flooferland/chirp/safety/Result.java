@@ -1,5 +1,6 @@
 package flooferland.chirp.safety;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public final class Result<TOk, TErr> {
@@ -22,12 +23,17 @@ public final class Result<TOk, TErr> {
     }
     public static <TOk, TErr> Result<TOk, TErr> err(@Nullable TErr error) {
         return new Result<>(null, error);
+    }public static <TOk> Result<TOk, String> err(@Nonnull String formatErr, Object ... args) {
+        return new Result<>(null, String.format(formatErr, args));
     }
     // endregion
     
     // region | Getting the value
     public @Nullable TOk letOk() {
         return this.value;
+    }
+    public @Nullable TErr letErr() {
+        return this.error;
     }
     
     public interface IMapSome<TOk, TErr> { Result<TOk, TErr> mapper(TOk value); }
@@ -46,8 +52,10 @@ public final class Result<TOk, TErr> {
     }
 
     public TOk unwrap() {
-        assert(value != null);
-        return value;
+        if (hasValue())
+            return value;
+        else
+            throw new RuntimeException(String.valueOf(error));
     }
     
     public TOk unwrapOr(TOk _default) {

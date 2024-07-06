@@ -1,13 +1,11 @@
-package flooferland.showbiz.showformat;
+package flooferland.showbiz.lowlevel;
 
-import flooferland.showbiz.showformat.data.ShowData;
-import flooferland.showbiz.showformat.formats.RshowFormat;
-import flooferland.showbiz.showformat.formats.ZshowFormat;
+import flooferland.showbiz.lowlevel.show.ShowData;
+import flooferland.showbiz.lowlevel.formats.RshowFormat;
+import flooferland.showbiz.lowlevel.formats.ZshowFormat;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.*;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -15,8 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LibraryTest {
     // private static final String IntermediatePath = "C:/Users/FlooferLand/Desktop/looney.bin";
-    private static final String RshowPath = "D:/Creative Engineering/Show tapes/Welcome in to Showbiz.rshw";
-    private static final String zPath = "C:/Users/FlooferLand/Desktop/looney.zshw";
+    private static final String inPath = "C:/Users/FlooferLand/Desktop/rshow_compatibility/normal/1- Mouth.rshw";
+    private static final String outPath = "C:/Users/FlooferLand/Desktop/rshow_compatibility/out.zshw";
     
     @Test void test() {
         System.out.println();
@@ -26,30 +24,35 @@ class LibraryTest {
         System.out.println("-- reading RR files");
         RshowFormat rshow = new RshowFormat();
         try {
-            InputStream stream = getFile(RshowPath);
+            InputStream stream = getFile(inPath);
             showData = rshow.readFromStream(stream);
             stream.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
         assertTrue(showData != null, "Rshow data is null");
-        
-        // Writing native files
-        System.out.println("-- writing native files");
+
+        // Writing zshow to file
+        System.out.printf("-- writing native file to \"%s\" %n", outPath);
         ZshowFormat zshow = new ZshowFormat();
-        try (InputStream zStream = zshow.writeToStream(showData)) {
-            // Reading native files
-            System.out.println("-- reading native files");
-            try {
-                /*InputStream binStream = getFile(IntermediatePath);
-                new BinShowFormat().readFromStream(binStream);
-                binStream.close();*/
-                //InputStream zStream = getFile(zPath);
-                new ZshowFormat().readFromStream(zStream);
-                zStream.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        try {
+            File zshowFile = new File(outPath);
+            zshowFile.createNewFile();
+
+            FileOutputStream stream = new FileOutputStream(zshowFile, false);
+            zshow.writeToStream(showData, stream);
+            stream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        // Reading zshow from file
+        System.out.printf("-- reading native file from \"%s\" %n", outPath);
+        try {
+            File zshowFile = new File(outPath);
+            FileInputStream stream = new FileInputStream(zshowFile);
+            zshow.readFromStream(stream);
+            stream.close();
         } catch (Exception e) {
             e.printStackTrace();
         }

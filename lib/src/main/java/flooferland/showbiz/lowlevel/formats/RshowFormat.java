@@ -1,9 +1,12 @@
-package flooferland.showbiz.showformat.formats;
+package flooferland.showbiz.lowlevel.formats;
 
-import flooferland.showbiz.showformat.IShowFormat;
-import flooferland.showbiz.showformat.data.ShowData;
+import flooferland.chirp.safety.Result;
+import flooferland.showbiz.lowlevel.IShowFormat;
+import flooferland.showbiz.lowlevel.show.ShowData;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -47,7 +50,7 @@ public class RshowFormat implements IShowFormat {
     }
     
     // 90% of the code are checks. Could probably be cut down using recursion - FL
-    public ShowData readFromStream(InputStream stream) {
+    public Result<ShowData, String> readFromStream(InputStream stream) {
         byte[] bytes;
         try {
             bytes = stream.readAllBytes();
@@ -242,11 +245,11 @@ public class RshowFormat implements IShowFormat {
         if (!has_video) {
             System.out.println("There is no video with this .rshw file");
         }
-        return new ShowData(signal_data, audio_data, video_data);
+        return Result.ok(new ShowData(signal_data, audio_data, video_data));
     }
 
     @Override
-    public InputStream writeToStream(ShowData format) {
+    public void writeToStream(ShowData format, OutputStream stream) {
         throw new RuntimeException("Not implemented");
     }
 

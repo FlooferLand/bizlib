@@ -1,12 +1,14 @@
-package flooferland.showbiz.showformat.formats;
+package flooferland.showbiz.lowlevel.formats;
 
-import flooferland.showbiz.showformat.*;
-import flooferland.showbiz.showformat.data.ShowData;
+import flooferland.showbiz.lowlevel.*;
+import flooferland.showbiz.lowlevel.show.ShowData;
+import flooferland.showbiz.lowlevel.util.BToolsUtil;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -14,6 +16,44 @@ import java.util.Objects;
 import java.util.zip.GZIPInputStream;
 
 public class BinShowFormat implements IShowFormat {
+    public static byte[] identBase = "BLOCK\0".getBytes();
+    public static byte[] noContentIdent = "EMPTY_CONTENT\0".getBytes();
+    public static byte[] dataEndIdent = { 0x00 };
+
+    public static byte[] makeIdent(byte[] bytes) {
+        return (byte[]) BToolsUtil.concatBytes(identBase, bytes);
+    }
+
+    public enum Ident {
+        Signal,
+        Audio,
+        Video;
+
+        public static final int signalByte = 0xA0;
+        public static final int audioByte = 0xB0;
+        public static final int videoByte = 0xC0;
+
+        public int toHex() {
+            return switch (this) {
+                case Ident.Signal -> signalByte;
+                case Ident.Audio  -> audioByte;
+                case Ident.Video  -> videoByte;
+            };
+        }
+
+        public static @Nullable Ident fromHex(int b) {
+            if (b == signalByte) {
+                return Ident.Signal;
+            } else if (b == audioByte) {
+                return Ident.Audio;
+            } else if (b == videoByte) {
+                return Ident.Video;
+            }
+
+            return null;
+        }
+    }
+    
     /** Parses the binary intermediate format and returns a new ShowFormat */
     @Override
     public ShowData readFromStream(InputStream inputStream) throws IOException {
@@ -38,8 +78,8 @@ public class BinShowFormat implements IShowFormat {
         @Nullable byte[] video = null;
         for (int i = 0; i < 2; i++) {
             // First block header
-            byte[] header = stream.readNBytes(DataConverter.identBase.length);
-            if (!Arrays.equals(header, DataConverter.identBase)) {
+            byte[] header = stream.readNBytes(identBase.length);
+            if (!Arrays.equals(header, identBase)) {
                 System.err.printf("ERROR: Block header \"%s\" doesn't match the format.\nThe length specified in the header of the last section might've been wrong.%n", new String(header, StandardCharsets.UTF_8));
                 return null;
             }
@@ -50,10 +90,10 @@ public class BinShowFormat implements IShowFormat {
             if (blockId == null) {
                 System.err.printf(
                         "Block ID doesn't match any known ID: %s\nExamples:\n- Signal section ID: %s\n- Audio section ID: %s\n- Video section ID: %s%n",
-                        Util.toHexString(blockIdBytes),
-                        Util.toHexString(Ident.signalByte),
-                        Util.toHexString(Ident.audioByte),
-                        Util.toHexString(Ident.videoByte)
+                        BToolsUtil.toHexString(blockIdBytes),
+                        BToolsUtil.toHexString(Ident.signalByte),
+                        BToolsUtil.toHexString(Ident.audioByte),
+                        BToolsUtil.toHexString(Ident.videoByte)
                 );
                 return null;
             }
@@ -63,7 +103,7 @@ public class BinShowFormat implements IShowFormat {
             int blockLength = ByteBuffer.wrap(blockLengthBytes).getInt();
             stream.skipNBytes(5);
 
-            System.out.printf("%s | %s%n", Util.hexArrayToString(blockLengthBytes), Util.hexArrayToChars(blockLengthBytes));
+            System.out.printf("%s | %s%n", BToolsUtil.hexArrayToString(blockLengthBytes), BToolsUtil.hexArrayToChars(blockLengthBytes));
 
             // Reading the data
             byte[] data = null;
@@ -106,7 +146,7 @@ public class BinShowFormat implements IShowFormat {
     }
 
     @Override
-    public InputStream writeToStream(ShowData format) throws IOException {
+    public void writeToStream(ShowData format, OutputStream stream) throws IOException {
         throw new RuntimeException("Not implemented");
     }
 }

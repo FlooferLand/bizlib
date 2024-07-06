@@ -1,10 +1,10 @@
-package flooferland.showbiz.showformat;
+package flooferland.showbiz.lowlevel.util;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.HexFormat;
 
-public class Util {
+public class BToolsUtil {
+    // region | Bytes, hex, arrays, etc
     public static <T> T[] concat(T[] a, T[] b) {
         T[] result = Arrays.copyOf(a, a.length + b.length);
         System.arraycopy(b, 0, result, a.length, b.length);
@@ -50,4 +50,9 @@ public class Util {
         builder.append(']');
         return builder.toString();
     }
+    // endregion
+    
+    // region | Other
+    
+    // endregion
 }

@@ -12,18 +12,22 @@ public final class Result<TOk, TErr> {
         return this.hasValue && this.value != null;
     }
     
-    // region | Constructors
     private Result(@Nullable TOk value, @Nullable TErr error) {
         this.value = value;
         this.error = error;
         this.hasValue = value != null;
     }
-    public static <TOk, TErr> Result<TOk, TErr> ok(@Nullable TOk value) {
+    
+    // region | Constructors
+    /** Stores a value; stores nothing is the value is <c>null</c> */
+    public static <TOk, TErr> Result<TOk, TErr> ok(@Nonnull TOk value) {
         return new Result<>(value, null);
     }
-    public static <TOk, TErr> Result<TOk, TErr> err(@Nullable TErr error) {
+    
+    public static <TOk, TErr> Result<TOk, TErr> err(@Nonnull TErr error) {
         return new Result<>(null, error);
-    }public static <TOk> Result<TOk, String> err(@Nonnull String formatErr, Object ... args) {
+    }
+    public static <TOk> Result<TOk, String> err(@Nonnull String formatErr, Object ... args) {
         return new Result<>(null, String.format(formatErr, args));
     }
     // endregion

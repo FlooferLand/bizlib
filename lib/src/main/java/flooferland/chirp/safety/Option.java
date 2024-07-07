@@ -10,9 +10,11 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import flooferland.chirp.types.SemanticVersion;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 
+@Nonnull
 @JsonSerialize(using = Option.Serializer.class)
 @JsonDeserialize(using = Option.Deserializer.class)
 public final class Option<T> {

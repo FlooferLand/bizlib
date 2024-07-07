@@ -30,6 +30,11 @@ public final class Result<TOk, TErr> {
     public static <TOk> Result<TOk, String> err(@Nonnull String formatErr, Object ... args) {
         return new Result<>(null, String.format(formatErr, args));
     }
+
+    /** Stores a value if the condition is true, otherwise it stores an error */
+    public static <TOk, TErr> Result<TOk, TErr> conditional(boolean condition, @Nonnull TOk value, @Nonnull TErr error) {
+        return condition ? ok(value) : err(error);
+    }
     // endregion
     
     // region | Getting the value

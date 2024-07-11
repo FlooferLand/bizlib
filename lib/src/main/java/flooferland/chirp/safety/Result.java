@@ -44,21 +44,6 @@ public final class Result<TOk, TErr> {
     public @Nullable TErr letErr() {
         return this.error;
     }
-    
-    public interface IMapSome<TOk, TErr> { Result<TOk, TErr> mapper(TOk value); }
-    public Result<TOk, TErr> mapOk(IMapSome<TOk, TErr> map) {
-        if (hasValue())
-            return map.mapper(value);
-        else
-            return err(error);
-    }
-    
-    public TOk expect(String message) {
-        if (hasValue())
-            return value;
-        else
-            throw new RuntimeException(message);
-    }
 
     public TOk unwrap() {
         if (hasValue())
@@ -72,6 +57,33 @@ public final class Result<TOk, TErr> {
             return value;
         else
             return _default;
+    }
+
+    public TOk expect(String message) {
+        if (hasValue())
+            return value;
+        else
+            throw new RuntimeException(message);
+    }
+    // endregion
+
+    // region | Value mapping
+    public interface IMapSome<TInput, TOutput> { TOutput mapper(TInput value); }
+
+    /** If there is a value, it'll map the value through this function */
+    public <TOutputOk> Result<TOutputOk, TErr> mapOk(IMapSome<TOk, TOutputOk> map) {
+        if (hasValue())
+            return Result.ok(map.mapper(value));
+        else
+            return err(error);
+    }
+    
+    /** If there is an error, it'll map the error through this function */
+    public <TOutputErr> Result<TOk, TOutputErr> mapErr(IMapSome<TErr, TOutputErr> map) {
+        if (hasValue())
+            return Result.ok(value);
+        else
+            return err(map.mapper(error));
     }
     // endregion
 }

@@ -245,7 +245,9 @@ public class RshowFormat implements IShowFormat {
         if (!has_video) {
             System.out.println("There is no video with this .rshw file");
         }
-        return Result.ok(new ShowData(signal_data, audio_data, video_data));
+        
+        // TODO: Maybe move the content of the function being called here, here
+        return ShowData.fromRshowSignal(signal_data, audio_data, video_data);
     }
 
     @Override

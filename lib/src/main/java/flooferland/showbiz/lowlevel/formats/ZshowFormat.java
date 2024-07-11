@@ -49,7 +49,7 @@ public class ZshowFormat implements IShowFormat {
         var byteChannel = new SeekableInMemoryByteChannel(fileBytes);
 
         // Result
-        SignalContainer signal = null;
+        SignalContainer container = null;
         byte[] audio = null;
         byte[] video = null;
         Metadata metadata = null;
@@ -63,7 +63,10 @@ public class ZshowFormat implements IShowFormat {
                     case "signal.midi":
                     case "signal.mid":
                         try {
-                            signal = new SignalContainer(MidiSystem.getSequence(stream));
+                            var containerResult = SignalContainer.fromSequenceSignal(MidiSystem.getSequence(stream));
+                            if (containerResult.letOk() instanceof SignalContainer sigContainer) {
+                                container = sigContainer;
+                            }
                         } catch (Exception e) {
                             return Result.err(e.toString());
                         }
@@ -108,10 +111,10 @@ public class ZshowFormat implements IShowFormat {
         }
 
         // Returning, and errors
-        if (signal == null) return Result.err("Signal data was null!");
+        if (container == null) return Result.err("Signal data was null!");
         if (audio == null) return Result.err("Audio data was null!");
         if (metadata == null) return Result.err("Metadata/info data was null!");
-        return Result.ok(new ShowData(signal, audio, video, metadata));
+        return Result.ok(new ShowData(container, audio, video, metadata));
     }
     
     @Override
@@ -132,7 +135,7 @@ public class ZshowFormat implements IShowFormat {
 
             // Signal file
             make7zEntry(archive, "signal.mid", file -> {
-                var sequence = MidiSignalManager.signalToMidi(format.Signal);
+                var sequence = MidiSignalManager.fromSignal(format.Signal);
 
                 // Writing the output
                 if (sequence.letOk() instanceof Sequence seq) {
@@ -142,6 +145,11 @@ public class ZshowFormat implements IShowFormat {
 
                         // Signal debug
                         try (FileOutputStream midiDebug = new FileOutputStream("C:\\Users\\FlooferLand\\Desktop\\rshow_compatibility\\out.mid")) {  // DEBUG ONLY
+                            System.out.printf("Wrote to \"%s\"\n", "C:\\Users\\FlooferLand\\Desktop\\rshow_compatibility\\out.mid");
+                            midiDebug.write(bitties.toByteArray());
+                        }
+                        try (FileOutputStream midiDebug = new FileOutputStream("C:\\Users\\FlooferLand\\midiexplorer_home\\midi\\out.mid")) {  // DEBUG ONLY
+                            System.out.printf("Wrote to \"%s\"\n", "C:\\Users\\FlooferLand\\midiexplorer_home\\midi\\out.mid");
                             midiDebug.write(bitties.toByteArray());
                         }
                     }

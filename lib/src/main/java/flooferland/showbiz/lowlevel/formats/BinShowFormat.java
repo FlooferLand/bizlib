@@ -1,5 +1,6 @@
 package flooferland.showbiz.lowlevel.formats;
 
+import flooferland.chirp.safety.Result;
 import flooferland.showbiz.lowlevel.*;
 import flooferland.showbiz.lowlevel.show.ShowData;
 import flooferland.showbiz.lowlevel.util.BToolsUtil;
@@ -56,15 +57,14 @@ public class BinShowFormat implements IShowFormat {
     
     /** Parses the binary intermediate format and returns a new ShowFormat */
     @Override
-    public ShowData readFromStream(InputStream inputStream) throws IOException {
+    public Result<ShowData, String> readFromStream(InputStream inputStream) throws IOException {
         // Uncompressed and reading the data
         var stream = new GZIPInputStream(inputStream);
 
         // File format header
         String formatHeader = new String(stream.readNBytes(8), StandardCharsets.UTF_8);
         if (!formatHeader.equals("SHOWBIN\0")) {
-            System.err.println(String.format("ERROR: File header \"%s\" doesn't match the format!", formatHeader));
-            return null;
+            return Result.err("ERROR: File header \"%s\" doesn't match the format!%n", formatHeader);
         }
 
         // File metadata
@@ -80,8 +80,7 @@ public class BinShowFormat implements IShowFormat {
             // First block header
             byte[] header = stream.readNBytes(identBase.length);
             if (!Arrays.equals(header, identBase)) {
-                System.err.printf("ERROR: Block header \"%s\" doesn't match the format.\nThe length specified in the header of the last section might've been wrong.%n", new String(header, StandardCharsets.UTF_8));
-                return null;
+                return Result.err("ERROR: Block header \"%s\" doesn't match the format.\nThe length specified in the header of the last section might've been wrong.%n", new String(header, StandardCharsets.UTF_8));
             }
 
             // First block id
@@ -110,8 +109,7 @@ public class BinShowFormat implements IShowFormat {
             if (stream.available() == 1) {
                 data = stream.readNBytes(blockLength);
                 if (data == null) {
-                    System.err.println("ERROR: Data is null");
-                    return null;
+                    return Result.err("ERROR: Data is null");
                 }
                 if (stream.available() == 1) {
                     stream.skipNBytes(1);
@@ -139,10 +137,9 @@ public class BinShowFormat implements IShowFormat {
 
         // Returning
         if (signal == null || audio == null) {
-            System.err.println("Signal/audio data is null for an unknown reason");
-            return null;
+            return Result.err("Signal/audio data is null for an unknown reason");
         }
-        return new ShowData(signal, audio, video);
+        return ShowData.fromRshowSignal(signal, audio, video);
     }
 
     @Override

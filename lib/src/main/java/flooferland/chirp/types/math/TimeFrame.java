@@ -19,7 +19,7 @@ public class TimeFrame {
         this.durationSeconds = durationSeconds;
     }
     private TimeFrame(double durationSeconds) {
-        this.durationSeconds = new BigDecimal(durationSeconds);
+        this.durationSeconds = BigDecimal.valueOf(durationSeconds);
     }
     
     // region | Creating from several units
@@ -27,14 +27,14 @@ public class TimeFrame {
         return new TimeFrame(seconds);
     }
     public static TimeFrame ofSeconds(double seconds) {
-        return ofSeconds(new BigDecimal(seconds));
+        return ofSeconds(BigDecimal.valueOf(seconds));
     }
     
     public static TimeFrame ofMillis(BigDecimal milliseconds) {
         return new TimeFrame(milliseconds.multiply(BigDecimal.valueOf(0.001)));
     }
     public static TimeFrame ofMillis(double milliseconds) {
-        return ofMillis(new BigDecimal(milliseconds));
+        return ofMillis(BigDecimal.valueOf(milliseconds));
     }
 
     public static TimeFrame ofMidiTicks(@Nonnull Sequence sequence, long ticks, double bpm) {
@@ -72,6 +72,15 @@ public class TimeFrame {
     /** Divides this unit by {@code other} */
     public TimeFrame div(@Nonnull TimeFrame other) {
         return TimeFrame.ofSeconds(durationSeconds.divide(other.durationSeconds, RoundingMode.HALF_EVEN));
+    }
+    /** Linearly interpolates between this time and {@code other} */
+    public TimeFrame lerp(@Nonnull TimeFrame target, double t) {
+        BigDecimal time = BigDecimal.valueOf(t);
+        return TimeFrame.ofSeconds(durationSeconds.add(target.durationSeconds.subtract(durationSeconds).multiply(time)));
+    }
+    /** Returns the time that is exactly between 2 times */
+    public static TimeFrame between(@Nonnull TimeFrame a, @Nonnull TimeFrame b) {
+        return a.lerp(b, 0.5);
     }
     // endregion
 

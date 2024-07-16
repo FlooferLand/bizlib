@@ -3,6 +3,7 @@ package flooferland.showbiz.lowlevel;
 import flooferland.chirp.safety.Option;
 import flooferland.chirp.safety.Result;
 import flooferland.showbiz.lowlevel.types.BitInfo;
+import flooferland.showbiz.lowlevel.types.DrawerInfo;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.InputStream;
@@ -48,22 +49,22 @@ public class BitChart {
      * Gets which drawer an int should represent.
      * Assumes int has the length of both drawers (ex: max 96)
      */
-    public static Pair<Integer, BitInfo.Drawer> getBitFromInt(int integer) {
+    public static Pair<Integer, DrawerInfo> getBitFromInt(int i) {
         int topDrawerLength = 0;
         for (Entry entry : chart) {
-            if (entry.getBit().drawer == BitInfo.Drawer.Top) {
+            if (entry.getBit().Drawer.equals(DrawerInfo.Top)) {
                 topDrawerLength += 1;
             }
         }
         
-        if (integer == 0) {
-            return Pair.of(0, BitInfo.Drawer.Bottom);
+        if (i == 0) {
+            return Pair.of(0, DrawerInfo.Bottom);
         }
         
-        if (integer > topDrawerLength) {
-            return Pair.of(integer - topDrawerLength, BitInfo.Drawer.Bottom);
+        if (i > topDrawerLength) {
+            return Pair.of(i - topDrawerLength, DrawerInfo.Bottom);
         } else {
-            return Pair.of(topDrawerLength - integer, BitInfo.Drawer.Top);
+            return Pair.of(topDrawerLength - i, DrawerInfo.Bottom);
         }
     }
 }

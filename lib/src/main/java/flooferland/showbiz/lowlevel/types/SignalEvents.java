@@ -1,6 +1,7 @@
 package flooferland.showbiz.lowlevel.types;
 
 import flooferland.chirp.safety.Result;
+import flooferland.chirp.types.math.TimePoint;
 import flooferland.chirp.types.math.VectorT;
 import flooferland.showbiz.lowlevel.MidiSignalManager;
 
@@ -9,6 +10,7 @@ import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.ShortMessage;
+import java.util.Arrays;
 import java.util.HashMap;
 
 // TODO: URGENT:
@@ -47,9 +49,9 @@ public class SignalEvents {
                 }
             };
             
-            // TODO: Should add this functionality to the Result type (return error if there is one, else return something else)
+            // TODO: Should add this functionality to the chip Result type (return error if there is one, else return something else)
             if (result.letOk() instanceof ShortMessage message) {
-                return Result.ok(new MidiEvent(message, event.Time.getStart().asMidiTicks(sequence, bpm)));
+                return Result.ok(new MidiEvent(message, event.Time.asMidiTicks(sequence, bpm)));
             } else if (result.letErr() instanceof String error) {
                 return Result.err(error);
             }
@@ -60,7 +62,7 @@ public class SignalEvents {
     }
 
     /** Converts a MIDI event to a signal event */
-    public static Result<SignalEvent, String> fromMidi(@Nonnull MidiEvent event, @Nonnull VectorT time) {
+    public static Result<SignalEvent, String> fromMidi(@Nonnull MidiEvent event, @Nonnull TimePoint time) {
         MidiMessage message = event.getMessage();
 
         SignalEvent signalEvent;
@@ -76,7 +78,7 @@ public class SignalEvents {
                 signalEvent = new BitEvent(time, msg == ShortMessage.NOTE_ON, bit);
                 break;
             default:
-                return Result.err("MIDI event of ID '%s' is not a bit event", msg);
+                return Result.err("MIDI event \"status:%s data:%s\" is not a bit event", message.getStatus(), Arrays.toString(message.getMessage()));
         };
 
         return Result.ok(signalEvent);
@@ -87,12 +89,12 @@ public class SignalEvents {
     public static class OtherMidiEvent extends SignalEvent {
         public byte[] Message;
         
-        public OtherMidiEvent(VectorT time, byte[] message, HashMap<String, Object> extraData) {
+        public OtherMidiEvent(TimePoint time, byte[] message, HashMap<String, Object> extraData) {
             super(EventType.OTHER, time);
             Message = message;
         }
         
-        public OtherMidiEvent(VectorT time, byte[] message) {
+        public OtherMidiEvent(TimePoint time, byte[] message) {
             super(EventType.OTHER, time);
             Message = message;
         }
@@ -102,12 +104,12 @@ public class SignalEvents {
     public static class BitEvent extends SignalEvent {
         public boolean State;
         public BitInfo Bit;
-        public BitEvent(VectorT time, boolean state, BitInfo bit, HashMap<String, Object> extraData) {
+        public BitEvent(TimePoint time, boolean state, BitInfo bit, HashMap<String, Object> extraData) {
             super(EventType.BIT, time, extraData);
             State = state;
             Bit = bit;
         }
-        public BitEvent(VectorT time, boolean state, BitInfo bit) {
+        public BitEvent(TimePoint time, boolean state, BitInfo bit) {
             super(EventType.BIT, time);
             State = state;
             Bit = bit;

@@ -54,11 +54,11 @@ public class BitInfo {
             final String fixYoProblem = "Please fix this yourself, as this patch may be removed in the future\n";
             switch (err) {
                 case Error.NegativeBitIdentifier -> {
-                    System.err.printf("Negative bit ID for '%s', patching this by making the ID absolute.\n%s", toString(id, drawer), fixYoProblem);
+                    System.out.printf("Negative bit ID for '%s', patching this by making the ID absolute.\n%s", toString(id, drawer), fixYoProblem);
                     id = Math.abs(id);
                 }
                 case Error.BitIdentifierTooHigh -> {
-                    System.err.printf("Bit ID is over the limit of '%s' for '%s', patching this by capping the ID.\n%s", DrawerInfo.MaxDrawerCapacity, toString(id, drawer), fixYoProblem);
+                    System.out.printf("Bit ID is over the limit of '%s' for '%s', patching this by capping the ID.\n%s", DrawerInfo.MaxDrawerCapacity, toString(id, drawer), fixYoProblem);
                     id = DrawerInfo.MaxDrawerCapacity;
                 }
             }

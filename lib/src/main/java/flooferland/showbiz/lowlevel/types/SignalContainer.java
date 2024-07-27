@@ -2,7 +2,7 @@ package flooferland.showbiz.lowlevel.types;
 
 import flooferland.chirp.safety.Option;
 import flooferland.chirp.safety.Result;
-import flooferland.chirp.types.math.TimeFrame;
+import flooferland.chirp.types.math.TimePoint;
 import flooferland.showbiz.lowlevel.BitChart;
 import flooferland.showbiz.lowlevel.MidiSignalManager;
 
@@ -95,7 +95,7 @@ public class SignalContainer {
             
             // Creates an end note when a note begins if the previous note hasn't ended
             if (lastEvent.State && event.State) {
-                events.add(i-1, new SignalEvents.BitEvent(TimeFrame.between(lastEvent.Time, event.Time), false, lastEvent.Bit));
+                events.add(i-1, new SignalEvents.BitEvent(event.Time, false, lastEvent.Bit));
             }
             
             lastEventOpt = Option.some(event);

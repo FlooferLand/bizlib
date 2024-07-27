@@ -2,7 +2,7 @@ package flooferland.showbiz.lowlevel;
 
 import flooferland.chirp.safety.Option;
 import flooferland.chirp.safety.Result;
-import flooferland.chirp.types.math.TimeFrame;
+import flooferland.chirp.types.math.TimePoint;
 import flooferland.chirp.types.math.VectorT;
 import flooferland.chirp.util.Match;
 import flooferland.showbiz.lowlevel.types.*;
@@ -231,21 +231,14 @@ public class MidiSignalManager {
                     return Result.err("Only the PPQ division type is supported for now");
 
                 // Get the time position of the current event
-                TimeFrame timeStart = TimeFrame.ofMidiTicks(sequence, midiEvent.getTick(), MidiSignalManager.signalBPM);
-
-                // Get the time end position of the current event (by looking at the next event's position)
-                TimeFrame timeEnd = TimeFrame.ofMidiTicks(
-                        sequence,
-                        (i + 1 < track.size())
-                                ? track.get(i + 1).getTick()
-                                : sequence.getTickLength(),
-                        MidiSignalManager.signalBPM
-                );
+                TimePoint time = TimePoint.ofMidiTicks(sequence, midiEvent.getTick(), MidiSignalManager.signalBPM);
 
                 // Adding the event
-                VectorT time = VectorT.ofStartEnd(timeStart, timeEnd);
-                if (SignalEvents.fromMidi(midiEvent, time).letOk() instanceof SignalEvent ev) {
+                Result midi = SignalEvents.fromMidi(midiEvent, time);
+                if (midi.letOk() instanceof SignalEvent ev) {
                     events.add(ev);
+                } else if (midi.letErr() instanceof String error) {
+                    System.err.println(error);
                 }
             }
             
@@ -380,7 +373,7 @@ public class MidiSignalManager {
        public static int createNotesFromSignal(@Nonnull Sequence sequence, @Nonnull Track track, @Nonnull SignalContainer signal) throws InvalidMidiDataException {
            int trackEventsBefore = track.size();
            for (SignalEvent signalEvent : signal.getEvents()) {
-               if (signalEvent.toMidi(sequence, signalBPM).letOk() instanceof MidiEvent event) {
+               if (SignalEvents.toMidi(signalEvent, sequence, signalBPM).letOk() instanceof MidiEvent event) {
                    track.add(event);
                }
            }

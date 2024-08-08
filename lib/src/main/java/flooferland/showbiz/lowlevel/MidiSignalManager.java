@@ -2,8 +2,8 @@ package flooferland.showbiz.lowlevel;
 
 import flooferland.chirp.safety.Option;
 import flooferland.chirp.safety.Result;
+import flooferland.chirp.types.math.TimeLength;
 import flooferland.chirp.types.math.TimePoint;
-import flooferland.chirp.types.math.VectorT;
 import flooferland.chirp.util.Match;
 import flooferland.showbiz.lowlevel.types.*;
 import org.apache.commons.lang3.tuple.Pair;
@@ -25,6 +25,7 @@ public class MidiSignalManager {
 
     /**
      * Converts rshw signal data into MIDI data.
+     * This is also currently used to convert RSHW data to the internal event system, kill 2 birds with one stone.
      */
     @Nonnull public static Result<Sequence, String> fromRshow(@Nonnull int[] topDrawer, @Nonnull int[] bottomDrawer) {
         System.out.println("Converting rshow to MIDI..");
@@ -60,6 +61,7 @@ public class MidiSignalManager {
             }
 
             // Timeline
+            // CHECKME: This might duplicate the data, making several tracks with the same data, which is.. not very good
             for (var group : groups.entrySet()) {
                 String key = group.getKey();
                 BitChart.Entry entry = group.getValue();
@@ -173,8 +175,7 @@ public class MidiSignalManager {
                 // Getting the bit's name (excluding the group name)
                 String groupName = null;
                 String bitName = null;
-                String[] nameArray = Arrays.stream(entry.getName().split("-", 2))
-                        .map(String::trim).toArray(String[]::new);
+                String[] nameArray = Arrays.stream(entry.getName().split("-", 2)).map(String::trim).toArray(String[]::new);
                 if (nameArray.length > 1) {
                     groupName = nameArray[0];
                     bitName = nameArray[1];
@@ -188,7 +189,13 @@ public class MidiSignalManager {
                 track.add(Utils.makeBpmChangeEvent(0, signalBPM));
 
                 // Creating the signal bits/notes
-                int trackNotes = Utils.createNotesFromSignal(sequence, track, signalContainer);
+                int trackEventsBefore = track.size();
+                for (SignalEvent signalEvent : signalContainer.getEvents()) {
+                    if (SignalEvents.toMidi(signalEvent, sequence, signalBPM).letOk() instanceof MidiEvent event) {
+                        track.add(event);
+                    }
+                }
+                int trackNotes = track.size() - trackEventsBefore;
                 if (trackNotes <= 1) {
                     System.err.printf("Warning! No notes were added to MIDI track \"%s\"!\n", trackName);
                 } else {
@@ -196,8 +203,8 @@ public class MidiSignalManager {
                 }
 
                 // End of track meta event
-                MidiEvent endOfTrackEvent = new MidiEvent(endOfTrack, sequence.getTickLength());
-                track.add(endOfTrackEvent);
+                // MidiEvent endOfTrackEvent = new MidiEvent(endOfTrack, sequence.getTickLength());
+                // track.add(endOfTrackEvent);
             }
 
             // Empty signal track just in case
@@ -297,12 +304,8 @@ public class MidiSignalManager {
            int lastValue = 0;
            for (int i = 0; i < signal.length; i++) {
                int value = signal[i];
-               ShortMessage bitOn = new ShortMessage(ShortMessage.NOTE_ON, 0, 69, defaultVelocity);
-               ShortMessage bitOff = new ShortMessage(ShortMessage.NOTE_OFF, 0, 69, defaultVelocity);
-
-               // TODO: Uncomment the "adding notes" section. This is for debug only!
-               // track.add(new MidiEvent(bitOn, i * sequence.getResolution()));
-               // track.add(new MidiEvent(bitOff, (i * 2) * sequence.getResolution()));
+               ShortMessage bitOn = new ShortMessage(ShortMessage.NOTE_ON, channel, value, defaultVelocity);
+               ShortMessage bitOff = new ShortMessage(ShortMessage.NOTE_OFF, channel, value, defaultVelocity);
                
                // Adding notes
                Option<Integer> prevPos = Option.conditional(i != 0, (i - 1) * sequence.getResolution());
@@ -367,17 +370,6 @@ public class MidiSignalManager {
            }
            
            return (track.size() - oldNotesCount) / (2 /* on/off notes both count*/);
-       }
-
-       /** Creates and adds MIDI notes to `track` from signal data */
-       public static int createNotesFromSignal(@Nonnull Sequence sequence, @Nonnull Track track, @Nonnull SignalContainer signal) throws InvalidMidiDataException {
-           int trackEventsBefore = track.size();
-           for (SignalEvent signalEvent : signal.getEvents()) {
-               if (SignalEvents.toMidi(signalEvent, sequence, signalBPM).letOk() instanceof MidiEvent event) {
-                   track.add(event);
-               }
-           }
-           return track.size() - trackEventsBefore;
        }
 
        private static <T> void printIfDebug(String s, Object ... args) {

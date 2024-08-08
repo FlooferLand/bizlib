@@ -12,6 +12,7 @@ public class DrawerInfo {
     public static final DrawerInfo Top = new DrawerInfo(1);
     public static final DrawerInfo Bottom = new DrawerInfo(0);
 
+    /** The number ID of the drawer. Ex: 0 or 1 for bottom or top */
     public final int Number;
 
     private DrawerInfo(int number) {

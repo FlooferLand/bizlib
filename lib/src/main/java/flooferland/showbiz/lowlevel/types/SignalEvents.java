@@ -1,8 +1,8 @@
 package flooferland.showbiz.lowlevel.types;
 
 import flooferland.chirp.safety.Result;
+import flooferland.chirp.types.math.TimeLength;
 import flooferland.chirp.types.math.TimePoint;
-import flooferland.chirp.types.math.VectorT;
 import flooferland.showbiz.lowlevel.MidiSignalManager;
 
 import javax.annotation.Nonnull;
@@ -10,13 +10,9 @@ import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.ShortMessage;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.HashMap;
-
-// TODO: URGENT:
-//       Figure out which architecture for events we're going to use
-//       A. Classic events (don't really have a concept of time,, basically just enums like BIT_ON and BIT_OFF, simpler)
-//       B. Duration-based (have a stricter concept of time, harder to implement but internally cleaner)
 
 // TODO: FIX ME. URGENT:
 //        BitEvents hold a duration, and they're currently using the classic event type,
@@ -49,16 +45,10 @@ public class SignalEvents {
                 }
             };
             
-            // TODO: Should add this functionality to the chip Result type (return error if there is one, else return something else)
-            if (result.letOk() instanceof ShortMessage message) {
-                return Result.ok(new MidiEvent(message, event.Time.asMidiTicks(sequence, bpm)));
-            } else if (result.letErr() instanceof String error) {
-                return Result.err(error);
-            }
+            return result.mapOk(message -> new MidiEvent(message, event.TimeStamp.asMidiTicks(sequence, bpm)));
         } catch (Exception e) {
             return Result.err(e.toString());
         }
-        return Result.err("Unknown error");
     }
 
     /** Converts a MIDI event to a signal event */
@@ -71,8 +61,8 @@ public class SignalEvents {
             case ShortMessage.NOTE_ON:
             case ShortMessage.NOTE_OFF:
                 short channel = (short) (message.getStatus() & 0x0F);
-                byte note = message.getMessage()[0];
-                byte velocity = message.getMessage()[1];
+                byte note = message.getMessage()[1];
+                byte velocity = message.getMessage()[2];
                 BitInfo bit = BitInfo.ofGuaranteed(note, DrawerInfo.of(channel));
 
                 signalEvent = new BitEvent(time, msg == ShortMessage.NOTE_ON, bit);

@@ -12,6 +12,8 @@ import java.util.Arrays;
 
 public class BitChart {
     public static final String path = "RAE_Bit_Chart.csv";
+    
+    /** Contains info about the bit chart (a basic template for how the signal maps to things) */
     public static final ArrayList<Entry> chart = read().unwrap();
 
     public record Entry(String getName, BitInfo getBit, String getType) {}
@@ -50,6 +52,7 @@ public class BitChart {
      * Assumes int has the length of both drawers (ex: max 96)
      */
     public static Pair<Integer, DrawerInfo> getBitFromInt(int i) {
+        // Getting when the bottom drawer begins
         int topDrawerLength = 0;
         for (Entry entry : chart) {
             if (entry.getBit().Drawer.equals(DrawerInfo.Top)) {
@@ -64,7 +67,7 @@ public class BitChart {
         if (i > topDrawerLength) {
             return Pair.of(i - topDrawerLength, DrawerInfo.Bottom);
         } else {
-            return Pair.of(topDrawerLength - i, DrawerInfo.Bottom);
+            return Pair.of(topDrawerLength - i, DrawerInfo.Top);
         }
     }
 }

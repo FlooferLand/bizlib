@@ -17,6 +17,7 @@ import org.apache.commons.compress.utils.SeekableInMemoryByteChannel;
 
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Sequence;
+import javax.sound.midi.Track;
 import javax.sound.sampled.AudioSystem;
 import java.io.*;
 

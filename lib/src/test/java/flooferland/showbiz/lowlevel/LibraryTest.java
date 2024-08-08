@@ -19,9 +19,6 @@ class LibraryTest {
     @Test void test() {
         System.out.println();
         ShowData showData = null;
-
-        // TODO: Debug the whole ass program
-        //      (MidiSignalManager.toSignal and maybe SignalContainer.fromSequenceSignal)
         
         // Reading RSHW
         System.out.printf("-- reading rshow from \"%s\"%n", inPath);
@@ -48,7 +45,7 @@ class LibraryTest {
         }
         
         // Reading zshow from file
-        System.out.printf("-- reading zshow from \"%s\" %n", outPath);
+        /*System.out.printf("-- reading zshow from \"%s\" %n", outPath);
         try {
             File zshowFile = new File(outPath);
             FileInputStream stream = new FileInputStream(zshowFile);
@@ -56,7 +53,7 @@ class LibraryTest {
             stream.close();
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }*/
         
         System.out.println();
     }

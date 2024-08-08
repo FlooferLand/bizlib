@@ -9,43 +9,43 @@ import javax.annotation.Nonnull;
  * Holds a start time and a duration; essentially just stores a length in time.
  */
 public final class VectorT {
-    @Nonnull private TimePoint start;
-    @Nonnull private TimePoint duration;
+    @Nonnull private TimeLength start;
+    @Nonnull private TimeLength duration;
     
-    private VectorT(@Nonnull TimePoint start, @Nonnull TimePoint duration) {
+    private VectorT(@Nonnull TimeLength start, @Nonnull TimeLength duration) {
         this.start = start;
         this.duration = duration;
     }
     
     // region | Constructors
-    public static VectorT ofStartEnd(@Nonnull TimePoint start, @Nonnull TimePoint end) {
+    public static VectorT ofStartEnd(@Nonnull TimeLength start, @Nonnull TimeLength end) {
         return new VectorT(start, end.sub(start));
     }
-    public static VectorT ofDuration(@Nonnull TimePoint start, @Nonnull TimePoint duration) {
+    public static VectorT ofDuration(@Nonnull TimeLength start, @Nonnull TimeLength duration) {
         return new VectorT(start, duration);
     }
     // endregion
 
     // region | Getters
-    public TimePoint getStart() {
+    public TimeLength getStart() {
         return start;
     }
-    public TimePoint getDuration() {
+    public TimeLength getDuration() {
         return start;
     }
-    public TimePoint getEnd() {
+    public TimeLength getEnd() {
         return start.add(duration);
     }
     // endregion
 
     // region | Setters
-    public void setStart(TimePoint start) {
+    public void setStart(TimeLength start) {
         this.start = start;
     }
-    public void setDuration(TimePoint duration) {
+    public void setDuration(TimeLength duration) {
         this.duration = duration;
     }
-    public void setEnd(TimePoint end) {
+    public void setEnd(TimeLength end) {
         this.duration = end.sub(this.start);
     }
     // endregion

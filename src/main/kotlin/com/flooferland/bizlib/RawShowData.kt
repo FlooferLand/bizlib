@@ -1,10 +1,17 @@
 package com.flooferland.bizlib
 
 data class RawShowData(
-    val signal: ByteArray,
+    val signal: IntArray,
     val audio: ByteArray,
     val video: ByteArray
 ) {
+    val hasSignal: Boolean
+        get() = this.signal.isNotEmpty()
+    val hasAudio: Boolean
+        get() = this.audio.isNotEmpty()
+    val hasVideo: Boolean
+        get() = this.video.isNotEmpty()
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

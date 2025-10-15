@@ -5,10 +5,11 @@ import com.flooferland.bizlib.RawShowData
 import java.io.InputStream
 import java.io.OutputStream
 
-class RshowFormat : IShowFormat {
+// TODO: Port the Java RshowFormat to Kotlin
+class RshowFormatKt : IShowFormat {
     override fun read(stream: InputStream): RawShowData {
         return RawShowData(
-            signal = ByteArray(512),
+            signal = IntArray(512),
             audio = ByteArray(512),
             video = ByteArray(512),
         )

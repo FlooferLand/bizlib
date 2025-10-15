@@ -4,6 +4,7 @@ version = "1.0.0"
 plugins {
     kotlin("jvm")
     id("io.kotest")
+    `maven-publish`
 }
 
 repositories {
@@ -17,4 +18,22 @@ dependencies {
 
 kotlin {
     jvmToolchain(21)
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/FlooferLand/bizlib")
+            credentials {
+                username = project.findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
+                password = project.findProperty("gpr.key") as String? ?: System.getenv("TOKEN")
+            }
+        }
+    }
+    publications {
+        register<MavenPublication>("gpr") {
+            from(components["java"])
+        }
+    }
 }

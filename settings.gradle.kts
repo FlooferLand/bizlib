@@ -5,6 +5,7 @@ pluginManagement {
     plugins {
         kotlin("jvm") version(kotlin)
         id("io.kotest") version(kotest)
+        `maven-publish`
     }
 }
 

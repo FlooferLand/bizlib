@@ -1,6 +1,0 @@
-[submodule "lib/src/main/java/flooferland/chirp"]
-	path = lib/src/main/java/flooferland/chirp
-	url = https://github.com/FlooferLand/chirp-src
-[submodule "lib/src/test/java/flooferland/chirp"]
-	path = lib/src/test/java/flooferland/chirp
-	url = https://github.com/FlooferLand/chirp-src

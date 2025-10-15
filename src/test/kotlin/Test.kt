@@ -9,7 +9,9 @@ import kotlin.io.path.Path
 class Test : FunSpec({
     context("Read an rshow file from disk") {
         lateinit var rshowFile: InputStream;
-        val rshowFilePath = runCatching { System.getenv("rshowFile") }.getOrNull()
+        val rshowFilePath = runCatching { System.getenv("rshowFile") }.getOrNull() ?: "./test/1 - Mouth.rshw"
+
+        @Suppress("SENSELESS_COMPARISON")
         if (rshowFilePath == null) {
             error("Test env var not set: rshowFile. Make sure to set this to an rshw file")
         }

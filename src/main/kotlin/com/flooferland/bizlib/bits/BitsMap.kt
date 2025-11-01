@@ -13,7 +13,7 @@ class BitsMap {
     private inner class Visitor : BitsmapBaseVisitor<Unit>() {
         private var currentFixture = mutableMapOf<MappingName, FixtureName>()
         private val movementsCurrentFixture = mutableMapOf<MappingName, Movements>()
-        private val bitStatements = mutableMapOf<Map<MappingName, Short>, BitMappingData>()
+        private val bitStatements = mutableMapOf<MappingName, MutableMap<Short, BitMappingData>>()
 
         override fun defaultResult() = Unit
 
@@ -55,8 +55,9 @@ class BitsMap {
                 }
             }
 
+            // TODO: Move things to the new data mapping
+
             // Adding the movements
-            val bits = mutableMapOf<MappingName, Short>()
             for (moves in ctx.mappedMovement()) {
                 val mapKey = moves.MAP().text
                 val moveKey = moves.movement().ID().text
@@ -64,23 +65,22 @@ class BitsMap {
                     if (mapKey != "any") {
                         movementsCurrentFixture[mapKey] ?: error("No fixture found for mapping $mapKey")
                     } else {
+                        // TODO: FIXME: This replaces the key with either one
                         val movements = Movements()
-                        currentFixture.keys.forEach { map ->
-                            movementsCurrentFixture[map]?.let { movements.putAll(it) }
-                        }
+                        movementsCurrentFixture.forEach { movements.putAll(it.value) }
                         movements
                     }
                 }
 
                 val bit = movements[moveKey] ?: error("The movement '$moveKey' doesn't exist in the map '$mapKey'")
-                bits[mapKey] = bit
+                val movementsTarget = bitStatements.getOrPut(mapKey, { mutableMapOf() })
+                val mapping = BitMappingData(
+                    flow = flow,
+                    rotate = rotate,
+                    anim = anim
+                )
+                movementsTarget[bit] = mapping
             }
-            val mapping = BitMappingData(
-                flow = flow,
-                rotate = rotate,
-                anim = anim
-            )
-            bitStatements[bits] = mapping
 
             bitmapFile = BotBitmapFile(
                 settings = mapOf(),

@@ -2,10 +2,11 @@ import com.strumenta.antlrkotlin.gradle.AntlrKotlinTask
 import org.gradle.kotlin.dsl.sourceSets
 
 group = "com.flooferland"
-version = "1.0.0"
+version = "1.0.1"
 
 val kotest: String by properties
 val antlr: String by properties
+@Suppress("PropertyName")
 val kotlin_serialization: String by properties
 @Suppress("PropertyName")
 val antlr_kotlin: String by properties

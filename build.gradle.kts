@@ -93,7 +93,7 @@ tasks.register("buildBitmapFiles") {
     doFirst {
         exec {
             workingDir = bitmapsDir
-            executable = if (Os.isFamily(Os.FAMILY_WINDOWS)) "python" else "python3"
+            executable = if (Os.isFamily(Os.FAMILY_WINDOWS)) "python" else "python3.9"
             args = listOf("generator.py", bitmapsGeneratedDir.absolutePath)
         }
     }

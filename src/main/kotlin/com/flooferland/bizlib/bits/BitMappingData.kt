@@ -3,7 +3,7 @@ package com.flooferland.bizlib.bits
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class BitMapping(
+data class BitMappingData(
     val flow: Double,
     val name: String? = null,
 

@@ -13,7 +13,7 @@ class BitsMap {
     private inner class Visitor : BitsmapBaseVisitor<Unit>() {
         private var currentFixture = mutableMapOf<MappingName, FixtureName>()
         private val mappingsCurrentFixture = mutableMapOf<MappingName, Movements>()
-        private val bitStatements = mutableMapOf<MappedBit, BitMapping>()
+        private val bitStatements = mutableMapOf<Map<MappingName, ShortArray>, BitMappingData>()
 
         override fun defaultResult() = Unit
 
@@ -57,6 +57,7 @@ class BitsMap {
             }
 
             // Adding the movements
+            val bits = mutableMapOf<MappingName, MutableList<Short>>()
             for (moves in ctx.mappedMovement()) {
                 val mapKey = moves.MAP().text
                 val moveKey = moves.movement().ID().text
@@ -70,18 +71,17 @@ class BitsMap {
                     }
                 }
 
-                val movement = movements[moveKey] ?: error("The movement '$moveKey' doesn't exist in the map '$mapKey'")
-                val bit = MappedBit(
-                    mapping = moves.MAP().text,
-                    bit = movement
-                )
-                val mapping = BitMapping(
-                    flow = flow,
-                    rotate = rotate,
-                    anim = anim
-                )
-                bitStatements[bit] = mapping
+                val bit = movements[moveKey] ?: error("The movement '$moveKey' doesn't exist in the map '$mapKey'")
+                val map = bits.getOrPut(mapKey, { mutableListOf() })
+                map.add(bit)
+                bits[mapKey] = map
             }
+            val mapping = BitMappingData(
+                flow = flow,
+                rotate = rotate,
+                anim = anim
+            )
+            bitStatements[bits.mapValues { it.value.toShortArray() }] = mapping
 
             bitmapFile = BotBitmapFile(
                 settings = mapOf(),

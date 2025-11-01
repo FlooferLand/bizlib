@@ -63,9 +63,9 @@ class Test : FunSpec({
         val mapStream = Files.newInputStream(Path("./test/map.bits"))
 
         test("Bizmap") {
-            val map = BitsMap(mapStream)
+            val map = BitsMap().load(mapStream)
 
-            val sets = map.currentFixture.map { (key, value) -> "$key: $value" }.joinToString("\n")
+            val sets = map.fixture.map { (key, value) -> "$key: $value" }.joinToString("\n")
             sets shouldBe "faz: bonnie\nrae: beach_bear"
         }
     }

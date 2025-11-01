@@ -7,12 +7,14 @@ import java.io.InputStream
 // TODO: Add thorough error throwing to tell the user why something doesn't work
 
 /** NOTE: Constructor will throw an exception if failed parsing */
-class BitsMap(stream: InputStream) {
-    var currentFixture = mutableMapOf<MappingName, FixtureName>()
-    val mappingsCurrentFixture = mutableMapOf<MappingName, Movements>()
-    val bitStatements = mutableMapOf<MappedBit, BitMapping>()
+class BitsMap {
+    private var bitmapFile: BotBitmapFile? = null
 
     private inner class Visitor : BitsmapBaseVisitor<Unit>() {
+        private var currentFixture = mutableMapOf<MappingName, FixtureName>()
+        private val mappingsCurrentFixture = mutableMapOf<MappingName, Movements>()
+        private val bitStatements = mutableMapOf<MappedBit, BitMapping>()
+
         override fun defaultResult() = Unit
 
         override fun visitSetStmt(ctx: BitsmapParser.SetStmtContext) {
@@ -81,12 +83,17 @@ class BitsMap(stream: InputStream) {
                 bitStatements[bit] = mapping
             }
 
+            bitmapFile = BotBitmapFile(
+                settings = mapOf(),
+                fixture = currentFixture,
+                bits = bitStatements
+            )
             super.visitBitStmt(ctx)
         }
     }
 
     /** NOTE: Will throw if failed parsing */
-    init {
+    fun load(stream: InputStream): BotBitmapFile {
         val lexer = BitsmapLexer(CharStreams.fromStream(stream))
         val tokens = CommonTokenStream(lexer)
         val parser = BitsmapParser(tokens)
@@ -94,5 +101,6 @@ class BitsMap(stream: InputStream) {
 
         val visitor = Visitor()
         visitor.visit(tree)
+        return bitmapFile ?: error("Internal error: ${this::bitmapFile.name} as not filled by visitor")
     }
 }

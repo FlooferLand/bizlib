@@ -13,7 +13,7 @@ class BitsMap {
     private inner class Visitor : BitsmapBaseVisitor<Unit>() {
         private var currentFixture = mutableMapOf<MappingName, FixtureName>()
         private val movementsCurrentFixture = mutableMapOf<MappingName, Movements>()
-        private val bitStatements = mutableMapOf<MappingName, MutableMap<Short, BitMappingData>>()
+        private val bitMovements = mutableMapOf<MappingName, MutableMap<Short, BitMappingData>>()
 
         override fun defaultResult() = Unit
 
@@ -55,37 +55,38 @@ class BitsMap {
                 }
             }
 
-            // TODO: Move things to the new data mapping
-
             // Adding the movements
             for (moves in ctx.mappedMovement()) {
                 val mapKey = moves.MAP().text
                 val moveKey = moves.movement().ID().text
-                val movements = run {
-                    if (mapKey != "any") {
-                        movementsCurrentFixture[mapKey] ?: error("No fixture found for mapping $mapKey")
-                    } else {
-                        // TODO: FIXME: This replaces the key with either one
-                        val movements = Movements()
-                        movementsCurrentFixture.forEach { movements.putAll(it.value) }
-                        movements
-                    }
-                }
-
-                val bit = movements[moveKey] ?: error("The movement '$moveKey' doesn't exist in the map '$mapKey'")
-                val movementsTarget = bitStatements.getOrPut(mapKey, { mutableMapOf() })
                 val mapping = BitMappingData(
                     flow = flow,
                     rotate = rotate,
-                    anim = anim
+                    anim = anim,
+                    name = currentFixture[mapKey]
                 )
-                movementsTarget[bit] = mapping
+
+                if (mapKey != "any") {
+                    val bit = (movementsCurrentFixture[mapKey] ?: error("No fixture found for mapping $mapKey"))[moveKey]
+                        ?: error("The movement '$moveKey' doesn't exist in the map '$mapKey'")
+                    val movementsTarget = bitMovements.getOrPut(mapKey, { mutableMapOf() })
+                    movementsTarget[bit] = mapping
+                } else {
+                    fun add(map: String) {
+                        val bit = (movementsCurrentFixture[map] ?: error("No fixture found for mapping $map"))[moveKey]
+                            ?: error("The movement '$moveKey' doesn't exist in the map '$map'")
+                        val movementsTarget = bitMovements.getOrPut(map, { mutableMapOf() })
+                        movementsTarget[bit] = mapping
+                    }
+                    add("faz")
+                    add("rae")
+                }
             }
 
             bitmapFile = BotBitmapFile(
                 settings = mapOf(),
                 fixture = currentFixture,
-                bits = bitStatements
+                bits = bitMovements
             )
             super.visitBitStmt(ctx)
         }

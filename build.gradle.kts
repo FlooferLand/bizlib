@@ -1,4 +1,5 @@
 import com.strumenta.antlrkotlin.gradle.AntlrKotlinTask
+import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.kotlin.dsl.sourceSets
 
 group = "com.flooferland"
@@ -92,7 +93,7 @@ tasks.register("buildBitmapFiles") {
     doFirst {
         exec {
             workingDir = bitmapsDir
-            executable = "python"
+            executable = if (Os.isFamily(Os.FAMILY_WINDOWS)) "python" else "python3"
             args = listOf("generator.py", bitmapsGeneratedDir.absolutePath)
         }
     }

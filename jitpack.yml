@@ -1,5 +1,2 @@
-before_install:
-  - sudo apt install python3.9
-
 jdk:
   - openjdk21

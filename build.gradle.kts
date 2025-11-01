@@ -1,5 +1,4 @@
 import com.strumenta.antlrkotlin.gradle.AntlrKotlinTask
-import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.kotlin.dsl.sourceSets
 
 group = "com.flooferland"
@@ -81,7 +80,7 @@ tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
 
-tasks.register("buildBitmapFiles") {
+tasks.register<BitmapGeneratorTask>("buildBitmapFiles") {
     val bitmapsDir = file("src/main/resources/bitmaps")
     val bitmapsGeneratedDir = file("build/generated/resources/bitmaps")
     val vscodeBitmapsDir = file("showbiz-vscode/data/bitmaps")
@@ -90,13 +89,8 @@ tasks.register("buildBitmapFiles") {
     outputs.dir(bitmapsGeneratedDir)
     outputs.dir(vscodeBitmapsDir)
 
-    doFirst {
-        exec {
-            workingDir = bitmapsDir
-            executable = if (Os.isFamily(Os.FAMILY_WINDOWS)) "python" else "python3.9"
-            args = listOf("generator.py", bitmapsGeneratedDir.absolutePath)
-        }
-    }
+    this.bitmapDir = bitmapsDir
+    this.bitmapsGeneratedDir = bitmapsGeneratedDir
 
     doLast {
         copy {

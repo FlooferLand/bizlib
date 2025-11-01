@@ -1,3 +1,4 @@
+import com.flooferland.bizlib.bits.BitsMap
 import com.flooferland.bizlib.formats.RshowFormat
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.comparables.*
@@ -19,11 +20,11 @@ class Test : FunSpec({
 
         test("Parse a sample file") {
             val format = RshowFormat()
-            val out = format.read(rshowFile)
+            val data = format.read(rshowFile)
             var count = 0
             fun expect(enabled: Boolean) {
                 val expected = if (enabled) 185 else 0
-                val value = out.signal[count]
+                val value = data.signal[count]
                 if (value == expected) {
                     println("$value = $expected")
                 } else {
@@ -41,14 +42,31 @@ class Test : FunSpec({
                 repeat(9) { expect(true); expect(false) }
                 repeat(6) { expect(false) }
                 repeat(9) { expect(true); expect(false); }
-                println("Validated $count bits out of ${out.signal.size}!")
+                println("Validated $count bits out of ${data.signal.size}!")
             } else {
                 println("NOTE: No in-depth test pattern found. Data might not be correct.")
             }
 
-            out.signal.size shouldBeGreaterThan 0
-            out.audio.size shouldBeGreaterThan 0
-            out.video.size shouldBeGreaterThanOrEqualTo 0
+            data.signal.size shouldBeGreaterThan 0
+            data.audio.size shouldBeGreaterThan 0
+            data.video.size shouldBeGreaterThanOrEqualTo 0
+        }
+
+        test("Parse and write out a sample file to disk") {
+            val format = RshowFormat()
+            val data = format.read(rshowFile)
+            Files.write(Path("./test/out.wav"), data.audio)
+        }
+    }
+
+    context("Test bizmap") {
+        val mapStream = Files.newInputStream(Path("./test/map.bits"))
+
+        test("Bizmap") {
+            val map = BitsMap(mapStream)
+
+            val sets = map.currentFixture.map { (key, value) -> "$key: $value" }.joinToString("\n")
+            sets shouldBe "faz: bonnie\nrae: beach_bear"
         }
     }
 })

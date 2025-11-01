@@ -1,0 +1,22 @@
+set faz bonnie
+set rae beach_bear
+
+any jaw {
+	flow 1.6
+	rotate "Jaw" x:-25
+}
+
+any head_up {
+	flow 0.8
+	rotate "Head" x:-25
+}
+
+any body_lean {
+	flow 1.0
+	anim "body_lean"
+}
+
+rae guitar_raise, faz arm_bend_l {
+	flow 1.1
+	anim "guitar_tilt"
+}

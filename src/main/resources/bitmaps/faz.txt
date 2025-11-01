@@ -1,0 +1,161 @@
+1	Freddy - Jaw
+2	Freddy - Head Up
+3	Freddy - Eyes Right
+4	Freddy - Eyes Left
+5	Freddy - Eyelids Right
+6	Freddy - Eyelids Left
+7	Freddy - Shoulder Twist R
+8	Freddy - Shoulder Twist L
+9	Freddy - Shoulder Up R
+10	Freddy - Shoulder Up L
+11	Freddy - Arm Twist R
+12	Freddy - Arm Twist L
+13	Freddy - Arm Bend R
+14	Freddy - Arm Bend L
+15	Freddy - Wrist Twist R
+16	Freddy - Wrist Twist L
+17	Freddy - Wrist Out R
+18	Freddy - Wrist Out L
+19	Freddy - Head Turn R
+20	Freddy - Head Turn L
+21	Freddy - Body Turn R
+22	Freddy - Body Turn L
+23	Freddy - Body Lean
+24	Freddy - Foot Tap
+25	Chica - Shoulder Twist L
+26	Chica - Arm Twist L
+27	Cupcake - Twist
+28	Chica - Eyelid R
+29	Chica - Eyelid L
+30	Chica - Jaw
+31	Chica - Eyes Right
+32	Chica - Eyes Left
+33	Bonnie - Jaw
+34	Bonnie - Head Up
+35	Bonnie - Eyes Right
+36	Bonnie - Eyes Left
+37	Bonnie - Eyelids Right
+38	Bonnie - Eyelids Left
+39	Bonnie - Shoulder Twist R
+40	Bonnie - Shoulder Twist L
+41	Bonnie - Shoulder Up R
+42	Bonnie - Ear R
+43	Bonnie - Arm Twist R
+44	Bonnie - Arm Twist L
+45	Bonnie - Ear L
+46	Bonnie - Arm Bend L
+47	Bonnie - Wrist Twist R
+48	Bonnie - Wrist Twist L
+49	Bonnie - Wrist Out R
+50
+51	Bonnie - Head Turn R
+52	Bonnie - Head Turn L
+53	Bonnie - Body Turn R
+54	Bonnie - Body Turn L
+55	Bonnie - Body Lean
+56	Chica - Body Lean
+57	Chica - Body Turn R
+58	Chica - Body Turn L
+59	Chica - Head Turn R
+60	Chica - Head Turn L
+61	Chica - Head Up
+62	Chica - Eyes R
+63	Chica - Eyes L
+64	Chica - Eyelid R
+65	Chica - Eyelid L
+66	Chica - Shoulder Twist R
+67	Chica - Shoulder Up R
+68	Chica - Arm Twist R
+69	Chica - Forearm Bend R
+70	Chica - Wrist Twist R
+71	Chica - Wrist Bend R
+72	Cupcake - Eyes Right
+73	Cupcake - Eyes Left
+74	Cupcake - Eyelid R
+75	Cupcake - Eyelid L
+76
+77
+78
+79
+80	Parrot - Jaw
+81	Foxy - Arm Twist R
+82	Foxy - Head Up
+83	Foxy - Eyes R
+84	Foxy - Eyes L
+85	Foxy - Eyelid R
+86	Foxy - Eyepatch
+87	Foxy - Jaw
+88	Foxy - Arm Twist L
+89	Curtains - Main OPN
+90	Curtains - Main CLS
+91	Curtains - Side OPN
+92	Curtains - Side CLS
+93	Parrot - Cage
+94	Parrot - Body Lean F
+95	Parrot - Body Lean B
+96	Parrot - Arms
+97	Parrot - Head Tip F
+98	Parrot - Head Tip B
+99	Foxy - Arm Up R
+100	Foxy - Arm Up L
+101	Foxy - Forearm Twist R
+102	Foxy - Forearm Twist L
+103	Foxy - Forearm Bend R
+104	Foxy - Forearm Bend L
+105	Foxy - Wrist Twist R
+106	Foxy - Wrist Twist L
+107	Foxy - Wrist Bend R
+108	Foxy - Wrist Bend L
+109	Foxy - Head Turn R
+110	Foxy - Head Turn L
+111	Foxy - Body Turn R
+112	Foxy - Body Turn L
+113	Foxy - Body Lean
+114	Foxy - Foot Tap R
+115	Foxy - Foot Tap L
+
+1	Spotlights - Freddy
+2	Spotlights - Purple
+3	Spotlights - Green
+4	Spotlights - Orange
+5	Stage Lights - Lower 1
+6	Stage Lights - Lower 2
+7	Stage Lights - Lower 3
+6	Stage Lights - Lower 4
+9	Stage Lights - Lower 5
+10	Stage Lights - Lower 6
+11	Stage Lights - Lower 7
+12	Spotlights - Bonnie
+13	Spotlights - Chica
+14	Flood Lights - Red
+15	Flood Lights - Yellow
+16	Flood Lights - Green
+17	Flood Lights - Blue
+18	Spotlights - Sun
+19	Stage Lights - Speaker Red
+20	Stage Lights - Backdrop Blue
+21	Stage Lights - Fiber Optic Stars
+22	Spotlights - Foxy
+23	Stage Lights - Main Mood Lights
+24	Stage Lights - Side Mood Lights
+25	Dual Pressure - Freddy
+26	Dual Pressure - Bonnie
+27	Dual Pressure - Chica
+28	Dual Pressure - Foxy
+29	Spotlights - Foxy Upper
+30	Stage Lights - Foxy Chand 1
+31	Stage Lights - Foxy Chand 2
+32	Stage Lights - Deck Day
+33	Stage Lights - Deck Sunset
+34	Stage Lights - Deck Night
+35	Stage Lights - Deck Flash
+36	Spotlights - Bird
+37	Spotlights - Red
+38	Spotlights - Yellow
+39	Spotlights - Blue
+40	TVs - Main Off
+41	TVs - Side Off
+42	Spotlights - Freddy Movie
+43	Spotlights - Freddy Movie Upper
+44
+45	Stage Lights - Snacks

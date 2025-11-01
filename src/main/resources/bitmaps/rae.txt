@@ -1,0 +1,201 @@
+1	Rolfe - Jaw
+2	Rolfe - Left Eye Lid
+3	Rolfe - Right Eye Lid
+4	Rolfe - Eyes Left
+5	Rolfe - Eyes Right
+6	Rolfe - Head Left
+7	Rolfe - Head Right
+8	Rolfe - Head Up
+9	Rolfe - Left Ear
+10	Rolfe - Right Ear
+11	Rolfe - Left Arm Raise
+12	Rolfe - Left Arm Twist
+13	Rolfe - Left Elbow
+14	Rolfe - Body Twist Left
+15	Rolfe - Body Twist Right
+16	Rolfe - Body Lean
+17	Rolfe - Right Arm Raise
+18	Rolfe - Right Arm Twist
+19	Rolfe - Right Elbow Twist
+20	Rolfe - Earl Head Tilt
+21	Duke - Head Right
+22	Duke - Head Up
+23	Duke - Left Ear
+24	Duke - Right Ear
+25	Duke - Head Left
+26	Duke - Left Eyelid
+27	Duke - Right Eyelid
+28	Duke - Eyes Left
+29	Duke - Eyes Right
+30	Duke - Jaw
+31	Duke - Right Elbow
+32	Duke - Left Foot (Hi-Hat)
+33	Duke - Left Arm Swing
+34	Duke - Right Arm Swing
+35	Duke - Left Elbow
+36	Rolfe - Earl Jaw
+37	Rolfe - Earl Eyebrow
+38	Props - Sun Jaw
+39	Props - Sun Raise
+40	Specials - Dual Pressure (TD)
+41	Fats - Left Eyelid
+42	Fats - Right Eyelid
+43	Fats - Eyes Left
+44	Fats - Eyes Right
+45	Fats - Jaw
+46	Props - Moon Jaw
+47	Props - Moon Raise
+48	Props - Looney Bird Hands
+49	Props - Antioch Down
+50	Props - Baby Bear Raise
+51	Fats - Head Tip Left
+52	Fats - Head Tip Right
+53	Fats - Head Up
+54	Fats - Head Left
+55	Fats - Head Right
+56
+57	Fats - Left Arm Swing
+58	Fats - Right Arm Swing
+59	Fats - Left Elbow
+60	Fats - Right Elbow
+61	Fats - Foot Tap
+62	Fats - Body Lean
+63	Duke - Right Foot (Bass Drum)
+64	Duke - Body Lean
+65
+66	Organ - Top Blue
+67	Organ - Top Red
+68	Organ - Top Amber
+69	Organ - Top Green
+70
+71	Organ - Leg Top
+72	Organ - Leg Mid
+73	Organ - Leg Bottom
+74	Organ - Cont Strobe
+75	Organ - Flash Strobe
+76	Sign - Inner
+77	Sign - Mid
+78	Sign - Outer
+79	Sign - Cont Strobe
+80	Sign - Flash Strobe
+81	Spots - Mitzi
+82	Spots - Beach Bear
+83	Spots - Looney Bird
+84	Spots - Billy Bob
+85	Spots - Fats
+86	Spots - Duke
+87	Spots - Rolfe
+88	Spots - Earl
+89	Curtains - Stage Right Open
+90	Curtains - Stage Right Close
+91	Curtains - Center Stage Open
+92	Curtains - Center Stage Close
+93	Curtains - Stage Left Open
+94	Curtains - Stage Left Close
+	N/A - End of RAE TD Bits
+	N/A - End of RAE TD Bits
+1	Beach Bear - Left Eyelid
+2	Beach Bear - Right Eyelid
+3	Beach Bear - Eye Cross
+4	Beach Bear - Left Hand Slide
+5	Beach Bear - Guitar Raise
+6	Beach Bear - Head Left
+7	Beach Bear - Head Right
+8	Beach Bear - Head Up
+9	Beach Bear - Left Leg Kick
+10	Beach Bear - Right Leg Kick
+11	Beach Bear - Right Arm Raise
+12	Beach Bear - Right Arm Twist
+13	Beach Bear - Right Elbow Twist
+14	Beach Bear - Right Wrist
+15	Beach Bear - Body Lean
+16	Beach Bear - Jaw
+17	Looney Bird - Jaw
+18	Mitzi - Right Arm Raise
+19	Mitzi - Right Elbow
+20	Mitzi - Right Arm Twist
+21	Looney Bird - Head Right
+22	Looney Bird - Raise
+23	Mitzi - Left Arm Raise
+24	Mitzi - Left Elbow
+25	Mitzi - Left Arm Twist
+26	Mitzi - Left Ear
+27	Mitzi - Right Ear
+28	Mitzi - Head Left
+29	Mitzi - Head Right
+30	Mitzi - Head Up
+31	Mitzi - Left Eyelid
+32	Mitzi - Right Eyelid
+33	Mitzi - Eyes Left
+34	Mitzi - Eyes Right
+35	Mitzi - Jaw
+36	Mitzi - Body Twist Left
+37	Mitzi - Body Twist Right
+38	Mitzi - Body Lean
+39	Billy Bob - Left Arm Slide
+40	Billy Bob - Guitar Raise
+41	Looney Bird - Left Eyelid
+42	Looney Bird - Right Eyelid
+43	Looney Bird - Eye Cross
+44	Billy Bob - Foot Tap
+45
+46	Billy Bob - Jaw
+47	Billy Bob - Left Eyelid
+48	Billy Bob - Right Eyelid
+49	Billy Bob - Eyes Left
+50	Billy Bob - Eyes Right
+51	Billy Bob - Head Left
+52	Billy Bob - Head Right
+53	Billy Bob - Head Tip Left
+54	Billy Bob - Head Tip Right
+55	Billy Bob - Head Up
+56	Billy Bob - Right Arm Raise
+57	Billy Bob - Right Arm Twist
+58	Billy Bob - Right Elbow Twist
+59	Billy Bob - Right Wrist
+60	Specials - Dual Pressure (BD)
+61	Billy Bob - Body Twist Left
+62	Billy Bob - Body Twist Right
+63	Billy Bob - Body Lean
+64	Specials - Tape Stop
+65	Specials - Tape Rewind
+66	Floods - Stage Right Blue
+67	Floods - Stage Right Green
+68	Floods - Stage Right Amber
+69	Floods - Stage Right Red
+70	Prop Lights - Applause
+71	Floods - Center Stage Blue
+72	Floods - Center Stage Green
+73	Floods - Center Stage Amber
+74	Floods - Center Stage Red
+75	Prop Lights - Drums
+76	Floods - Stage Left Blue
+77	Floods - Stage Left Green
+78	Floods - Stage Left Amber
+79	Floods - Stage Left Red
+80	Prop Lights - Fire/Still
+81	Floods - Backdrop Outside Blue
+82	Floods - Backdrop Inside Amber
+83	Floods - Treeline Blue
+84	Floods - Backdrop Inside Blue
+85	Floods - Treeline Red
+86	Floods - Bushes Green
+87	Floods - Bushes Red/Amber
+88	Spots - Sun Spot
+89	Spots - Moon Spot
+90	Spots - Spider Spot
+91	Prop Lights - Gas Pump
+92	Stage Lights - Service Station (Red)
+93	Stage Lights - Service Station (Blue)
+94	Stage Lights - Rainbow #1 (Red)
+95	Stage Lights - Rainbow #2 (Yellow)
+96	Spots - Guitar Spot
+97
+98	Klunk - Foot Swivel
+99	Klunk - Body Left
+100	Klunk - Body Right
+101	Klunk - Body Lean
+102	Prop Bots - Klick Jaw
+103	Prop Bots - Klick
+104	Prop Bots - Abomination
+105	Spotlights - Klick

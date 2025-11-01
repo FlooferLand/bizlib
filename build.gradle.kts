@@ -1,11 +1,20 @@
+import com.strumenta.antlrkotlin.gradle.AntlrKotlinTask
+import org.gradle.kotlin.dsl.sourceSets
+
 group = "com.flooferland"
 version = "1.0.0"
 
 val kotest: String by properties
+val antlr: String by properties
+val kotlin_serialization: String by properties
+@Suppress("PropertyName")
+val antlr_kotlin: String by properties
 
 plugins {
     kotlin("jvm")
     id("io.kotest")
+    id("com.strumenta.antlr-kotlin")
+    antlr
     `maven-publish`
 }
 
@@ -14,17 +23,98 @@ repositories {
 }
 
 dependencies {
+    // https://mvnrepository.com/artifact/org.antlr/antlr4
+    antlr("org.antlr:antlr4:${antlr}")
+    implementation("com.strumenta:antlr-kotlin-runtime:${antlr_kotlin}")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${kotlin_serialization}")
     testImplementation("io.kotest:kotest-runner-junit5-jvm:${kotest}")
     testImplementation("io.kotest:kotest-framework-engine:${kotest}")
     testImplementation("io.kotest:kotest-assertions-core:${kotest}")
 }
 
+val generateKotlinGrammarSource = tasks.register<AntlrKotlinTask>("generateKotlinGrammarSource") {
+    dependsOn("cleanGenerateKotlinGrammarSource")
+
+    source = fileTree(layout.projectDirectory.dir("src/main/antlr")) {
+        include("**/*.g4")
+    }
+
+    val pkgName = "com.flooferland.bizlib.bits.generated"
+    packageName = pkgName
+
+    arguments = listOf("-visitor")
+
+    val outDir = "generatedAntlr/${pkgName.replace(".", "/")}"
+    outputDirectory = layout.buildDirectory.dir(outDir).get().asFile
+}
+
+tasks.compileKotlin {
+    dependsOn(tasks.generateGrammarSource)
+}
+tasks.compileTestKotlin {
+    dependsOn(tasks.generateTestGrammarSource)
+}
+
+sourceSets {
+    create("antlr")
+    main {
+        resources {
+            srcDir("build/generated/resources")
+        }
+    }
+}
+
 kotlin {
     jvmToolchain(21)
+    sourceSets {
+        main {
+            kotlin {
+                srcDir(generateKotlinGrammarSource)
+            }
+        }
+    }
 }
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+}
+
+tasks.register("buildBitmapFiles") {
+    val bitmapsDir = file("src/main/resources/bitmaps")
+    val bitmapsGeneratedDir = file("build/generated/resources/bitmaps")
+    val vscodeBitmapsDir = file("showbiz-vscode/data/bitmaps")
+
+    inputs.dir(bitmapsDir)
+    outputs.dir(bitmapsGeneratedDir)
+    outputs.dir(vscodeBitmapsDir)
+
+    doFirst {
+        exec {
+            workingDir = bitmapsDir
+            executable = "python"
+            args = listOf("generator.py", bitmapsGeneratedDir.absolutePath)
+        }
+    }
+
+    doLast {
+        copy {
+            from(bitmapsGeneratedDir)
+            into(vscodeBitmapsDir)
+            include("*.json")
+        }
+    }
+}
+
+tasks.processResources {
+    dependsOn("buildBitmapFiles")
+}
+tasks.processTestResources {
+    dependsOn("buildBitmapFiles")
+}
+
+tasks.build {
+    dependsOn("buildBitmapFiles")
 }
 
 publishing {

@@ -12,8 +12,8 @@ class BitsMap {
 
     private inner class Visitor : BitsmapBaseVisitor<Unit>() {
         private var currentFixture = mutableMapOf<MappingName, FixtureName>()
-        private val mappingsCurrentFixture = mutableMapOf<MappingName, Movements>()
-        private val bitStatements = mutableMapOf<Map<MappingName, ShortArray>, BitMappingData>()
+        private val movementsCurrentFixture = mutableMapOf<MappingName, Movements>()
+        private val bitStatements = mutableMapOf<Map<MappingName, Short>, BitMappingData>()
 
         override fun defaultResult() = Unit
 
@@ -22,7 +22,7 @@ class BitsMap {
             val mapping = BitUtils.readBitmap(map) ?: error("No bitmap registered for map '$map'")
             val fixtureKey = ctx.fixture().ID().text
             val movements = mapping[fixtureKey] ?: error("Fixture '$fixtureKey' wasn't found")
-            mappingsCurrentFixture[map] = movements
+            movementsCurrentFixture[map] = movements
             currentFixture[map] = fixtureKey
             super.visitSetStmt(ctx)
         }
@@ -57,31 +57,31 @@ class BitsMap {
             }
 
             // Adding the movements
-            val bits = mutableMapOf<MappingName, MutableList<Short>>()
+            val bits = mutableMapOf<MappingName, Short>()
             for (moves in ctx.mappedMovement()) {
                 val mapKey = moves.MAP().text
                 val moveKey = moves.movement().ID().text
                 val movements = run {
                     if (mapKey != "any") {
-                        mappingsCurrentFixture[mapKey] ?: error("No fixture found for mapping $mapKey")
+                        movementsCurrentFixture[mapKey] ?: error("No fixture found for mapping $mapKey")
                     } else {
                         val movements = Movements()
-                        mappingsCurrentFixture.values.forEach { movements.putAll(it) }
+                        currentFixture.keys.forEach { map ->
+                            movementsCurrentFixture[map]?.let { movements.putAll(it) }
+                        }
                         movements
                     }
                 }
 
                 val bit = movements[moveKey] ?: error("The movement '$moveKey' doesn't exist in the map '$mapKey'")
-                val map = bits.getOrPut(mapKey, { mutableListOf() })
-                map.add(bit)
-                bits[mapKey] = map
+                bits[mapKey] = bit
             }
             val mapping = BitMappingData(
                 flow = flow,
                 rotate = rotate,
                 anim = anim
             )
-            bitStatements[bits.mapValues { it.value.toShortArray() }] = mapping
+            bitStatements[bits] = mapping
 
             bitmapFile = BotBitmapFile(
                 settings = mapOf(),

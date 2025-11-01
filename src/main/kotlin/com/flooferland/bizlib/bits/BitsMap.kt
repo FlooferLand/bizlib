@@ -28,7 +28,6 @@ class BitsMap {
         }
 
         override fun visitBitStmt(ctx: BitsmapParser.BitStmtContext) {
-            println(ctx.mappedMovement().joinToString(", ") { "${it.MAP().text} ${it.movement().ID().text}" })
             var rotate: RotateCommand? = null
             var anim: AnimCommand? = null
             var flow = 0.0

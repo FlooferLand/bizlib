@@ -9,6 +9,7 @@ any jaw {
 any head_up {
 	flow 0.8
 	rotate "Head" x:-25
+	move "Head" x:5
 }
 
 any body_lean {

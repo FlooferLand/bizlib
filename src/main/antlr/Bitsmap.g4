@@ -6,12 +6,13 @@ setStmt: 'set' MAP fixture;
 
 // Bit statement
 bitStmt: mappedMovement (',' mappedMovement)* '{' bitFields+ '}';
-bitFields: flowField | animField | rotateField;
+bitFields: flowField | animField | rotateField | moveField;
 
 // Bit fields
 flowField: 'flow' DECIMAL;
 animField: 'anim' STRING;
 rotateField: 'rotate' bone vec3i;
+moveField: 'move' bone vec3i;
 
 // Thingies
 mappedMovement: MAP movement;

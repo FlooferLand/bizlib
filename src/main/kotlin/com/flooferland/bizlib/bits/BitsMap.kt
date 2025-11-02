@@ -29,6 +29,7 @@ class BitsMap {
 
         override fun visitBitStmt(ctx: BitsmapParser.BitStmtContext) {
             var rotate: RotateCommand? = null
+            var move: MoveCommand? = null
             var anim: AnimCommand? = null
             var flow = 0.0
             for (field in ctx.bitFields()) {
@@ -42,15 +43,13 @@ class BitsMap {
                     }
                     field.rotateField() != null -> {
                         val bone = field.rotateField()!!.bone().STRING().text.removeSurrounding("\"")
-                        val vec3i = run {
-                            val vec = field.rotateField()!!.vec3i()
-                            val angle = Angle3()
-                            vec.iaxisX()?.let { angle.x = it.INTEGER().text.toIntOrNull() ?: 0 }
-                            vec.iaxisY()?.let { angle.y = it.INTEGER().text.toIntOrNull() ?: 0 }
-                            vec.iaxisZ()?.let { angle.z = it.INTEGER().text.toIntOrNull() ?: 0 }
-                            angle
-                        }
+                        val vec3i = Coords3.fromAntlr(field.rotateField()?.vec3i()!!)
                         rotate = RotateCommand(bone = bone, target = vec3i)
+                    }
+                    field.moveField() != null -> {
+                        val bone = field.moveField()!!.bone().STRING().text.removeSurrounding("\"")
+                        val vec3i = Coords3.fromAntlr(field.moveField()?.vec3i()!!)
+                        move = MoveCommand(bone = bone, target = vec3i)
                     }
                 }
             }
@@ -62,6 +61,7 @@ class BitsMap {
                 val mapping = BitMappingData(
                     flow = flow,
                     rotate = rotate,
+                    move = move,
                     anim = anim,
                     name = currentFixture[mapKey]
                 )

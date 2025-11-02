@@ -8,8 +8,8 @@ data class BitMappingData(
     val flow: Double,
     val name: String? = null,
 
-    val rotate: RotateCommand? = null,
-    val move: MoveCommand? = null,
+    val rotates: List<RotateCommand> = listOf(),
+    val moves: List<MoveCommand> = listOf(),
     val anim: AnimCommand? = null
 )
 

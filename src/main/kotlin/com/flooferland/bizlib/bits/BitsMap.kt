@@ -28,8 +28,8 @@ class BitsMap {
         }
 
         override fun visitBitStmt(ctx: BitsmapParser.BitStmtContext) {
-            var rotate: RotateCommand? = null
-            var move: MoveCommand? = null
+            var rotates = mutableListOf<RotateCommand>()
+            var moves = mutableListOf<MoveCommand>()
             var anim: AnimCommand? = null
             var flow = 0.0
             for (field in ctx.bitFields()) {
@@ -44,24 +44,24 @@ class BitsMap {
                     field.rotateField() != null -> {
                         val bone = field.rotateField()!!.bone().STRING().text.removeSurrounding("\"")
                         val vec3i = Coords3.fromAntlr(field.rotateField()?.vec3i()!!)
-                        rotate = RotateCommand(bone = bone, target = vec3i)
+                        rotates += RotateCommand(bone = bone, target = vec3i)
                     }
                     field.moveField() != null -> {
                         val bone = field.moveField()!!.bone().STRING().text.removeSurrounding("\"")
                         val vec3i = Coords3.fromAntlr(field.moveField()?.vec3i()!!)
-                        move = MoveCommand(bone = bone, target = vec3i)
+                        moves += MoveCommand(bone = bone, target = vec3i)
                     }
                 }
             }
 
             // Adding the movements
-            for (moves in ctx.mappedMovement()) {
-                val mapKey = moves.MAP().text
-                val moveKey = moves.movement().ID().text
+            for (mappedMovement in ctx.mappedMovement()) {
+                val mapKey = mappedMovement.MAP().text
+                val moveKey = mappedMovement.movement().ID().text
                 val mapping = BitMappingData(
                     flow = flow,
-                    rotate = rotate,
-                    move = move,
+                    rotates = rotates,
+                    moves = moves,
                     anim = anim,
                     name = currentFixture[mapKey]
                 )

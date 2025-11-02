@@ -21,3 +21,15 @@ rae guitar_raise, faz arm_bend_l {
 	flow 1.1
 	anim "guitar_tilt"
 }
+
+faz eyes_left, rae left_eyelid {
+    flow 0.6
+    move "LeftEye" x:1
+    move "RightEye" x:1
+}
+
+faz eyes_right, rae right_eyelid {
+    flow 0.6
+    move "LeftEye" x:-1
+    move "RightEye" x:-1
+}

@@ -8,7 +8,7 @@ import java.io.InputStream
 import java.nio.file.Files
 import kotlin.io.path.Path
 
-class Test : FunSpec({
+class RshwTest : FunSpec({
     context("Read an rshow file from disk") {
         lateinit var rshowFile: InputStream;
         val rshowFilePath = runCatching { System.getenv("rshowFile") }.getOrNull() ?: "./test/1 - Mouth.rshw"
@@ -57,21 +57,6 @@ class Test : FunSpec({
             val format = RshowFormat()
             val data = format.read(rshowFile)
             Files.write(Path("./test/out.wav"), data.audio)
-        }
-    }
-
-    context("Test bizmap") {
-        val mapStream = Files.newInputStream(Path("./test/map.bits"))
-
-        test("Bizmap") {
-            val map = BitsMap().load(mapStream)
-
-            val sets = map.fixture.map { (key, value) -> "$key: $value" }.joinToString("\n")
-            sets shouldBe "faz: bonnie\nrae: beach_bear"
-
-            for ((mapping, bits) in map.bits) {
-                mapping shouldNotBe "any"
-            }
         }
     }
 })

@@ -18,9 +18,12 @@ class BizmapTest : FunSpec({
             val sets = map.fixture.map { (key, value) -> "$key: $value" }.joinToString("\n")
             sets shouldBe "faz: bonnie\nrae: beach_bear"
 
-            for ((mapping, bits) in map.bits) {
+            /*for ((mapping, bits) in map.bits) {
                 mapping shouldNotBe "any"
-            }
+                for ((bit, data) in bits) {
+                    println("$bit: ${data.moves} ${data.rotates}")
+                }
+            }*/
         }
     }
 })

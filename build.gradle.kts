@@ -2,7 +2,7 @@ import com.strumenta.antlrkotlin.gradle.AntlrKotlinTask
 import org.gradle.kotlin.dsl.sourceSets
 
 group = "com.flooferland"
-version = "1.0.2"
+version = "1.0.3"
 
 val kotest: String by properties
 val antlr: String by properties

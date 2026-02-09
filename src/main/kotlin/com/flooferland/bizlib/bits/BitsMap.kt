@@ -28,14 +28,25 @@ class BitsMap {
         }
 
         override fun visitBitStmt(ctx: BitsmapParser.BitStmtContext) {
-            var rotates = mutableListOf<RotateCommand>()
-            var moves = mutableListOf<MoveCommand>()
+            val rotates = mutableListOf<RotateCommand>()
+            val moves = mutableListOf<MoveCommand>()
+            var flow = FlowCommand()
             var anim: AnimCommand? = null
-            var flow = 0.0
+            var wiggleMul = 0.0
             for (field in ctx.bitFields()) {
                 when {
                     field.flowField() != null -> {
-                        flow = field.flowField()!!.DECIMAL().text.toDoubleOrNull() ?: 0.0
+                        flow = FlowCommand(
+                            speed = field.flowField()!!.DECIMAL().text.toDoubleOrNull() ?: 0.0,
+                            easing = when (field.flowField()!!.EASING()?.text) {
+                                "ease-in" -> Easing.EaseIn
+                                "linear" -> Easing.Linear
+                                else -> Easing.Default
+                            }
+                        )
+                    }
+                    field.wiggleMulField() != null -> {
+                        wiggleMul = field.wiggleMulField()!!.DECIMAL().text.toDoubleOrNull() ?: 0.0
                     }
                     field.animField() != null -> {
                         val animValue = field.animField()!!.STRING().text.removeSurrounding("\"")
@@ -60,6 +71,7 @@ class BitsMap {
                 val moveKey = mappedMovement.movement().ID().text
                 val mapping = BitMappingData(
                     flow = flow,
+                    wiggleMul = wiggleMul,
                     rotates = rotates,
                     moves = moves,
                     anim = anim,

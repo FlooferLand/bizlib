@@ -3,13 +3,13 @@ set rae beach_bear
 
 any jaw {
 	flow 1.6
-	rotate "Jaw" x:-25
+	rotate "Jaw" x:-25.5
 }
 
 any head_up {
-	flow 0.8
+	flow ease-in 0.8
 	rotate "Head" x:-25
-	move "Head" x:5
+	move "Head" x:5.3
 }
 
 any body_lean {

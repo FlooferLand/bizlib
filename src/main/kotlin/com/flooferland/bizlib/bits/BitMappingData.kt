@@ -5,12 +5,26 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class BitMappingData(
-    val flow: Double,
+    val flow: FlowCommand,
+    val wiggleMul: Double,
     val name: String? = null,
 
     val rotates: List<RotateCommand> = listOf(),
     val moves: List<MoveCommand> = listOf(),
     val anim: AnimCommand? = null
+)
+
+@Serializable
+enum class Easing {
+    Default,
+    Linear,
+    EaseIn
+}
+
+@Serializable
+data class FlowCommand(
+    val speed: Double = 1.0,
+    val easing: Easing = Easing.Default
 )
 
 @Serializable
@@ -33,13 +47,13 @@ data class MoveCommand(
 )
 
 @Serializable
-data class Coords3(var x: Int = 0, var y: Int = 0, var z: Int = 0) {
+data class Coords3(var x: Float = 0f, var y: Float = 0f, var z: Float = 0f) {
     companion object {
         fun fromAntlr(vec: BitsmapParser.Vec3iContext): Coords3 {
             val angle = Coords3()
-            vec.iaxisX()?.let { angle.x = it.INTEGER().text.toIntOrNull() ?: 0 }
-            vec.iaxisY()?.let { angle.y = it.INTEGER().text.toIntOrNull() ?: 0 }
-            vec.iaxisZ()?.let { angle.z = it.INTEGER().text.toIntOrNull() ?: 0 }
+            vec.iaxisX()?.let { angle.x = it.DECIMAL().text.toFloatOrNull() ?: 0f }
+            vec.iaxisY()?.let { angle.y = it.DECIMAL().text.toFloatOrNull() ?: 0f }
+            vec.iaxisZ()?.let { angle.z = it.DECIMAL().text.toFloatOrNull() ?: 0f }
             return angle
         }
     }

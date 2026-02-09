@@ -32,7 +32,7 @@ class BitsMap {
             val moves = mutableListOf<MoveCommand>()
             var flow = FlowCommand()
             var anim: AnimCommand? = null
-            var wiggleMul = 0.0
+            var wiggleMul = 1.0
             for (field in ctx.bitFields()) {
                 when {
                     field.flowField() != null -> {

@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [gradle.properties]
+
+jobs:
+  tag:
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read version
+        id: version
+        run: |
+          VERSION=$(grep "^version" gradle.properties | cut -d'=' -f2 | tr -d '[:space:]')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+      - name: Create tag
+        id: create-tag
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Tag already exists"
+            exit 0
+          fi
+          git tag $VERSION
+          git push origin $VERSION
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

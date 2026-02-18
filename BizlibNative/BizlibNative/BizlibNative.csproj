@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <PublishAot>true</PublishAot>
+    </PropertyGroup>
+    <ItemGroup>
+      <PackageReference Include="System.Formats.Nrbf" Version="10.0.3" />
+    </ItemGroup>
+
+    <Target Name="Publishing" AfterTargets="Build" Condition="'$(IsPublishingSubProject)' != 'true'">
+        <!-- Linux -->
+        <PropertyGroup>
+            <_WinPath>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/$(_JavaNativesDir)/linux-x86-64/'))</_WinPath>
+            <_WslPath>/mnt/$(_WinPath.Replace('\', '/').Replace(':', '').ToLower())</_WslPath>
+        </PropertyGroup>
+        <Exec Command="wsl dotnet publish ./BizlibNative.csproj -c $(Configuration) -r linux-x64 --output &quot;$(_WslPath)&quot; /p:IsPublishingSubProject=true" />
+        
+        <!-- Windows -->
+        <PropertyGroup>
+            <_JavaNativesDir>../../src/main/resources</_JavaNativesDir>
+        </PropertyGroup>
+        <Exec Command="dotnet publish ./BizlibNative.csproj -c $(Configuration) -r win-x64 --output &quot;$(_JavaNativesDir)/win32-x86-64/&quot; /p:IsPublishingSubProject=true" />
+
+        <!-- Packages break for some reason without this -->
+        <Exec Command="dotnet restore ./BizlibNative.csproj /p:IsPublishingSubProject=true" />
+    </Target>
+</Project>

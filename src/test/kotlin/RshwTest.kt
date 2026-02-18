@@ -53,6 +53,13 @@ class RshwTest : FunSpec({
             data.audio.size shouldBeGreaterThan 0
             data.video.size shouldBeGreaterThanOrEqualTo 0
         }
+        test("Test borked rshw (file)").config(enabledIf = { Files.exists(borkedPath) }) {
+            val format = RshowFormat()
+            val data = format.readFile(borkedPath)
+            data.signal.size shouldBeGreaterThan 0
+            data.audio.size shouldBeGreaterThan 0
+            data.video.size shouldBeGreaterThanOrEqualTo 0
+        }
 
         test("Parse and write out show audio to disk") {
             val format = RshowFormat()

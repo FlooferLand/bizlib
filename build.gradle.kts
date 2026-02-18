@@ -10,6 +10,7 @@ val antlr: String by properties
 val kotlin_serialization: String by properties
 @Suppress("PropertyName")
 val antlr_kotlin: String by properties
+val jna: String by properties
 
 plugins {
     kotlin("jvm")
@@ -28,10 +29,14 @@ dependencies {
     antlr("org.antlr:antlr4:${antlr}")
     implementation("com.strumenta:antlr-kotlin-runtime:${antlr_kotlin}")
 
+    // Kotlin / Kotest
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${kotlin_serialization}")
     testImplementation("io.kotest:kotest-runner-junit5-jvm:${kotest}")
     testImplementation("io.kotest:kotest-framework-engine:${kotest}")
     testImplementation("io.kotest:kotest-assertions-core:${kotest}")
+
+    // JNA
+    implementation("net.java.dev.jna:jna:${jna}")
 }
 
 val generateKotlinGrammarSource = tasks.register<AntlrKotlinTask>("generateKotlinGrammarSource") {
@@ -103,6 +108,7 @@ tasks.register<BitmapGeneratorTask>("buildBitmapFiles") {
 }
 
 tasks.processResources {
+    exclude("*.dbg")
     dependsOn("buildBitmapFiles")
 }
 tasks.processTestResources {

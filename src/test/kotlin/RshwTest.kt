@@ -1,23 +1,19 @@
-import com.flooferland.bizlib.bits.BitsMap
+import com.flooferland.bizlib.formats.LegacyRshowFormat
 import com.flooferland.bizlib.formats.RshowFormat
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.comparables.*
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import java.io.InputStream
 import java.nio.file.Files
 import kotlin.io.path.Path
 
 class RshwTest : FunSpec({
     context("Read an rshow file from disk") {
-        lateinit var rshowFile: InputStream;
-        val rshowFilePath = runCatching { System.getenv("rshowFile") }.getOrNull() ?: "./test/1 - Mouth.rshw"
+        lateinit var rshowFile: InputStream
 
-        @Suppress("SENSELESS_COMPARISON")
-        if (rshowFilePath == null) {
-            error("Test env var not set: rshowFile. Make sure to set this to an rshw file")
+        beforeTest {
+            rshowFile = Files.newInputStream(Path("./test/1 - Mouth.rshw"))
         }
-        rshowFile = Files.newInputStream(Path(rshowFilePath))
 
         test("Parse a sample file") {
             val format = RshowFormat()
@@ -35,25 +31,30 @@ class RshwTest : FunSpec({
                 count += 1
             }
 
-            if ("1 - Mouth.rshw" in rshowFilePath) {
-                expect(false); expect(true)
-                repeat(27) { expect(false) }
-                repeat(15) { expect(true); expect(false); }
-                repeat(5) { expect(false) }
-                repeat(9) { expect(true); expect(false) }
-                repeat(6) { expect(false) }
-                repeat(9) { expect(true); expect(false); }
-                println("Validated $count bits out of ${data.signal.size}!")
-            } else {
-                println("NOTE: No in-depth test pattern found. Data might not be correct.")
-            }
+            expect(false); expect(true)
+            repeat(27) { expect(false) }
+            repeat(15) { expect(true); expect(false); }
+            repeat(5) { expect(false) }
+            repeat(9) { expect(true); expect(false) }
+            repeat(6) { expect(false) }
+            repeat(9) { expect(true); expect(false); }
+            println("Validated $count bits out of ${data.signal.size}!")
 
             data.signal.size shouldBeGreaterThan 0
             data.audio.size shouldBeGreaterThan 0
             data.video.size shouldBeGreaterThanOrEqualTo 0
         }
 
-        test("Parse and write out a sample file to disk") {
+        val borkedPath = Path("D:\\Animatronics\\Creative Engineering\\Show tapes\\Rubber Biscuit.rshw")
+        test("Test borked rshw").config(enabledIf = { Files.exists(borkedPath) }) {
+            val format = RshowFormat()
+            val data = format.read(Files.newInputStream(borkedPath))
+            data.signal.size shouldBeGreaterThan 0
+            data.audio.size shouldBeGreaterThan 0
+            data.video.size shouldBeGreaterThanOrEqualTo 0
+        }
+
+        test("Parse and write out show audio to disk") {
             val format = RshowFormat()
             val data = format.read(rshowFile)
             Files.write(Path("./test/out.wav"), data.audio)

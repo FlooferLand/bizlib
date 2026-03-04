@@ -6,12 +6,15 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class BitMappingData(
     val flow: FlowCommand,
-    val wiggleMul: Double,
     val name: String? = null,
 
     val rotates: List<RotateCommand> = listOf(),
     val moves: List<MoveCommand> = listOf(),
-    val anim: AnimCommand? = null
+    val anim: AnimCommand? = null,
+    val type: MoveType,
+    val hold: BooleanType,
+
+    val wiggleMul: Double
 )
 
 @Serializable
@@ -51,9 +54,9 @@ data class Coords3(var x: Float = 0f, var y: Float = 0f, var z: Float = 0f) {
     companion object {
         fun fromAntlr(vec: BitsmapParser.Vec3iContext): Coords3 {
             val angle = Coords3()
-            vec.iaxisX()?.let { angle.x = it.DECIMAL().text.toFloatOrNull() ?: 0f }
-            vec.iaxisY()?.let { angle.y = it.DECIMAL().text.toFloatOrNull() ?: 0f }
-            vec.iaxisZ()?.let { angle.z = it.DECIMAL().text.toFloatOrNull() ?: 0f }
+            vec.iaxisX()?.let { angle.x = it.num().text.toFloatOrNull() ?: 0f }
+            vec.iaxisY()?.let { angle.y = it.num().text.toFloatOrNull() ?: 0f }
+            vec.iaxisZ()?.let { angle.z = it.num().text.toFloatOrNull() ?: 0f }
             return angle
         }
     }

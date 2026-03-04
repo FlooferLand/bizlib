@@ -13,15 +13,36 @@ class BitsMap {
     private inner class Visitor : BitsmapBaseVisitor<Unit>() {
         private var currentFixture = mutableMapOf<MappingName, FixtureName>()
         private val movementsCurrentFixture = mutableMapOf<MappingName, Movements>()
-        private val bitMovements = mutableMapOf<MappingName, MutableMap<Short, BitMappingData>>()
+        private val bitMovements = mutableMapOf<MappingName, MutableMap<UShort, BitMappingData>>()
+        private var version: UShort = 0u
 
         override fun defaultResult() = Unit
 
+        @Throws(IllegalStateException::class)
+        private fun ParserRuleContext.err(message: String): Nothing {
+            var message = message
+            this.position?.let { message += " (line ${it.start.line}, column ${it.start.column})" }
+            error(message)
+        }
+
+        private fun ParserRuleContext.warn(message: String) {
+            var message = message
+            this.position?.let { message += " (line ${it.start.line}, column ${it.start.column})" }
+            println("[Bizlib] WARN: $message")
+        }
+
+        override fun visitPrepFields(ctx: BitsmapParser.PrepFieldsContext) {
+            ctx.versionPrep()?.let { versionPrep ->
+                version = versionPrep.INTEGER().text.toUShortOrNull() ?: version
+            }
+            super.visitPrepFields(ctx)
+        }
+
         override fun visitSetStmt(ctx: BitsmapParser.SetStmtContext) {
             val map = ctx.MAP().text
-            val mapping = BitUtils.readBitmap(map) ?: error("No bitmap registered for map '$map'")
+            val mapping = BitUtils.readBitmap(map) ?: ctx.err("No bitmap registered for map '$map'")
             val fixtureKey = ctx.fixture().ID().text
-            val movements = mapping[fixtureKey] ?: error("Fixture '$fixtureKey' wasn't found")
+            val movements = mapping[fixtureKey] ?: ctx.err("Fixture '$fixtureKey' wasn't found")
             movementsCurrentFixture[map] = movements
             currentFixture[map] = fixtureKey
             super.visitSetStmt(ctx)
@@ -32,21 +53,20 @@ class BitsMap {
             val moves = mutableListOf<MoveCommand>()
             var flow = FlowCommand()
             var anim: AnimCommand? = null
+            var type: MoveType = MoveType.Default
+            var hold: BooleanType = BooleanType.defaultNo()
             var wiggleMul = 1.0
             for (field in ctx.bitFields()) {
                 when {
                     field.flowField() != null -> {
                         flow = FlowCommand(
-                            speed = field.flowField()!!.DECIMAL().text.toDoubleOrNull() ?: 0.0,
+                            speed = field.flowField()!!.num().text.toDoubleOrNull() ?: 0.0,
                             easing = when (field.flowField()!!.EASING()?.text) {
                                 "ease-in" -> Easing.EaseIn
                                 "linear" -> Easing.Linear
                                 else -> Easing.Default
                             }
                         )
-                    }
-                    field.wiggleMulField() != null -> {
-                        wiggleMul = field.wiggleMulField()!!.DECIMAL().text.toDoubleOrNull() ?: 0.0
                     }
                     field.animField() != null -> {
                         val animValue = field.animField()!!.STRING().text.removeSurrounding("\"")
@@ -62,36 +82,57 @@ class BitsMap {
                         val vec3i = Coords3.fromAntlr(field.moveField()?.vec3i()!!)
                         moves += MoveCommand(bone = bone, target = vec3i)
                     }
+                    field.typeField() != null -> {
+                        type = MoveType.from(field.typeField()!!.MOVE_TYPE().text)
+                    }
+                    field.holdField() != null -> {
+                        hold = BooleanType.from(field.holdField()!!.BOOLEAN().text)
+                    }
+                    field.wiggleMulField() != null -> {
+                        wiggleMul = field.wiggleMulField()!!.num().text.toDoubleOrNull() ?: 0.0
+                    }
                 }
             }
 
             // Adding the movements
             for (mappedMovement in ctx.mappedMovement()) {
                 val mapKey = mappedMovement.MAP().text
-                val moveKey = mappedMovement.movement().ID().text
                 val mapping = BitMappingData(
                     flow = flow,
-                    wiggleMul = wiggleMul,
                     rotates = rotates,
                     moves = moves,
                     anim = anim,
+                    type = type,
+                    hold = hold,
+                    wiggleMul = wiggleMul,
                     name = currentFixture[mapKey]
                 )
 
-                if (mapKey != "any") {
-                    val bit = (movementsCurrentFixture[mapKey] ?: error("No fixture found for mapping $mapKey"))[moveKey]
-                        ?: error("The movement '$moveKey' doesn't exist in the map '$mapKey'")
+                val moveName = mappedMovement.bit().ID()?.text
+                val moveId: UShort? = mappedMovement.bit().INTEGER()?.text?.toUShortOrNull()
+                    ?: mappedMovement.bit().DRAWER_BIT()?.text?.let { bitStr ->
+                        val num = bitStr.filter { it.isDigit() }.toUShortOrNull() ?: ctx.err("Bit ID '${bitStr}' is not a number, nor a name.")
+                        when {
+                            bitStr.endsWith("td") -> num
+                            bitStr.endsWith("bd") -> (BitUtils.NEXT_DRAWER + num).toUShort()
+                            else -> ctx.err("Bit ID '${bitStr}' is not a number, nor a name.")
+                        }
+                    }
+                if (moveName == null && moveId == null) {
+                    ctx.err("No movement name/id found for mapping $mapKey (please enter a valid name or the bit ID)")
+                }
+
+                fun add(mapKey: String) {
+                    val map = movementsCurrentFixture[mapKey] ?: ctx.err("No fixture found for mapping $mapKey")
+                    val bit: UShort? = map[moveName] ?: moveId
+                    if (bit == null) ctx.err("The movement '$moveName' doesn't exist in the map '$mapKey'")
                     val movementsTarget = bitMovements.getOrPut(mapKey, { mutableMapOf() })
                     movementsTarget[bit] = mapping
+                }
+                if (mapKey != "any") {
+                    add(mapKey)
                 } else {
-                    fun add(map: String) {
-                        val bit = (movementsCurrentFixture[map] ?: error("No fixture found for mapping $map"))[moveKey]
-                            ?: error("The movement '$moveKey' doesn't exist in the map '$map'")
-                        val movementsTarget = bitMovements.getOrPut(map, { mutableMapOf() })
-                        movementsTarget[bit] = mapping
-                    }
-                    add("faz")
-                    add("rae")
+                    movementsCurrentFixture.keys.forEach { add(it) }
                 }
             }
 

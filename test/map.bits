@@ -1,3 +1,4 @@
+!version 2
 set faz bonnie
 set rae beach_bear
 
@@ -32,4 +33,11 @@ faz eyes_right, rae right_eyelid {
     flow 0.6
     move "LeftEye" x:-1
     move "RightEye" x:-1
+}
+
+rae 96td {
+    flow 0.6
+    move "Mouth" x:-1
+    type servo
+    hold yes
 }

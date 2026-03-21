@@ -52,7 +52,7 @@ class BitsMap {
             val rotates = mutableListOf<RotateCommand>()
             val moves = mutableListOf<MoveCommand>()
             var flow = FlowCommand()
-            var anim: AnimCommand? = null
+            var anim = mutableListOf<AnimCommand>()
             var type: MoveType = MoveType.Default
             var hold: BooleanType = BooleanType.defaultNo()
             var wiggleMul = 1.0
@@ -70,7 +70,7 @@ class BitsMap {
                     }
                     field.animField() != null -> {
                         val animValue = field.animField()!!.STRING().text.removeSurrounding("\"")
-                        anim = AnimCommand(id = animValue)
+                        anim += AnimCommand(id = animValue)
                     }
                     field.rotateField() != null -> {
                         val bone = field.rotateField()!!.bone().STRING().text.removeSurrounding("\"")

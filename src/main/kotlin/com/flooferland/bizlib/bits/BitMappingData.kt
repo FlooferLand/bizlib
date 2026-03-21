@@ -10,7 +10,7 @@ data class BitMappingData(
 
     val rotates: List<RotateCommand> = listOf(),
     val moves: List<MoveCommand> = listOf(),
-    val anim: AnimCommand? = null,
+    val anim: List<AnimCommand> = listOf(),
     val type: MoveType,
     val hold: BooleanType,
 

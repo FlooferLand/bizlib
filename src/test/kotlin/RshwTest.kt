@@ -66,5 +66,11 @@ class RshwTest : FunSpec({
             val data = format.read(rshowFile)
             Files.write(Path("./test/out.wav"), data.audio)
         }
+
+        test("Parse and write a show back out to disk") {
+            val format = RshowFormat()
+            val data = format.read(rshowFile)
+            format.write(Path("./test/out.rshw"), data) shouldBe true
+        }
     }
 })

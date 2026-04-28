@@ -4,7 +4,6 @@ import com.flooferland.bizlib.BizlibNative
 import com.flooferland.bizlib.IShowFormat
 import com.flooferland.bizlib.RawShowData
 import java.io.InputStream
-import java.io.OutputStream
 import com.sun.jna.*
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
@@ -36,7 +35,7 @@ class RshowFormat : IShowFormat {
 
     private fun processRead(data: BizlibNative.RshwData.ByValue?): RawShowData {
         if (data == null) error("Received null")
-        if (data.hasError) error("Unknown error (${data::hasError.name}=true)")
+        data.getError()?.let { error(it) }
 
         val audio = if (data.audioPtr != null && data.audioLen > 0) {
             data.audioPtr!!.getByteArray(0, data.audioLen)
@@ -58,8 +57,8 @@ class RshowFormat : IShowFormat {
             .onFailure { System.err.println("Failed to clean up rshw") }
     }
 
-    override fun write(stream: OutputStream, data: RawShowData) {
-        // TODO: Add rshw writing
-        error("Write not implemented")
+    override fun write(path: Path, data: RawShowData) {
+        val data = BizlibNative.RshwData.ByValue(data)
+        BizlibNative.instance?.WriteRshwFile(path.toString(), data)
     }
 }

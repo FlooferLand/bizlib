@@ -1,0 +1,8 @@
+﻿<linker>
+    <assembly fullname="System.Runtime.Serialization.Formatters">
+        <namespace fullname="System.Runtime.Serialization.Formatters.Binary" preserve="all" />
+    </assembly>
+    <assembly fullname="System.Runtime.Serialization.Primitives">
+        <namespace fullname="System.Runtime.Serialization" preserve="all" />
+    </assembly>
+</linker>

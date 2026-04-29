@@ -1,5 +1,3 @@
-﻿namespace BizlibNative;
-
-public static partial class Main {
+﻿public static partial class Main {
 
 }

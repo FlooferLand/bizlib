@@ -70,7 +70,7 @@ class RshwTest : FunSpec({
         test("Parse and write a show back out to disk") {
             val format = RshowFormat()
             val data = format.read(rshowFile)
-            format.write(Path("./test/out.rshw"), data)
+            format.write(Files.newOutputStream(Path("./test/out.rshw")), data)
         }
     }
 })

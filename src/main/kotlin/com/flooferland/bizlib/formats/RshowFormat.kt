@@ -7,14 +7,15 @@ import com.flooferland.bizlib.nrbf.NrbfEncoder
 import com.flooferland.bizlib.nrbf.PrimitiveType
 import com.sun.jna.Memory
 import java.io.InputStream
+import java.io.OutputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 
 class RshowFormat : IShowFormat {
     // TODO: Make an interface for the NRBF stuff, so I can use the same functions to read as well
-    override fun write(path: Path, data: RawShowData) {
-        NrbfEncoder(Files.newOutputStream(path)) {
+    override fun write(stream: OutputStream, data: RawShowData) {
+        NrbfEncoder(stream) {
             serializationHeader()
             binaryLibrary("Assembly-CSharp")
             clazz("rshwFormat", arrayOf(

@@ -253,11 +253,6 @@ public class LegacyRshowFormat implements IShowFormat {
         return (bytes[0] & 0xFF) | ((bytes[1] & 0xFF) << 8) | ((bytes[2] & 0xFF) << 16) | ((bytes[3] & 0xFF) << 24);
     }
 
-    @Override
-    public void write(@NotNull Path path, @NotNull RawShowData data) {
-        throw new RuntimeException("Not implemented");
-    }
-
     public void write(@NotNull OutputStream stream, @NotNull RawShowData data) {
         throw new RuntimeException("Not implemented");
     }

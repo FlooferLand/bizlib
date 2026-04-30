@@ -5,6 +5,7 @@ import com.flooferland.bizlib.RawShowData
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.InputStream
+import java.io.OutputStream
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -29,8 +30,8 @@ class BizshwFormat : IShowFormat {
     }
 
     @OptIn(ExperimentalUnsignedTypes::class)
-    override fun write(path: Path, data: RawShowData) {
-        DataOutputStream(Files.newOutputStream(path)).use { s ->
+    override fun write(stream: OutputStream, data: RawShowData) {
+        DataOutputStream(stream).use { s ->
             val header = "bizshw, 1.0"
             s.writeByte(header.length)
             s.write(header.toByteArray(Charsets.US_ASCII))

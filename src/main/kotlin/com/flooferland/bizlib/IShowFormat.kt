@@ -13,5 +13,8 @@ interface IShowFormat {
     fun read(stream: InputStream): RawShowData
 
     /** @throws java.io.IOException */
-    fun write(path: Path, data: RawShowData)
+    fun writeFile(path: Path, data: RawShowData) = write(Files.newOutputStream(path), data)
+
+    /** @throws java.io.IOException */
+    fun write(stream: OutputStream, data: RawShowData)
 }

@@ -61,7 +61,7 @@ class RshowFormat : IShowFormat {
             data.audioPtr!!.getByteArray(0, data.audioLen)
         } else error("Missing audio")
 
-        val signal = if (data.signalPtr != null && data.signalLen > 0) {
+        val signal = if (data.signalPtr != null) {
             data.signalPtr!!.getIntArray(0, data.signalLen)
         } else error("Missing signal")
 

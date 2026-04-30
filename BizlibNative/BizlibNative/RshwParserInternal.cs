@@ -1,8 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Formats.Nrbf;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
 
 /** All the rshw arrays and how many elements they have
  * (note: *Len is the array length, not the pointer size in memory)

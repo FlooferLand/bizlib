@@ -43,7 +43,6 @@ interface BizlibNative : Library {
 
     fun ReadRshw(handle: Pointer, size: Int): RshwData.ByValue
     fun ReadRshwFile(path: String): RshwData.ByValue
-    fun WriteRshwFile(path: String, data: RshwData.ByValue): Boolean
     fun FreeRshw(data: RshwData.ByValue)
 
     companion object {

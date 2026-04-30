@@ -3,12 +3,31 @@ package com.flooferland.bizlib.formats
 import com.flooferland.bizlib.BizlibNative
 import com.flooferland.bizlib.IShowFormat
 import com.flooferland.bizlib.RawShowData
+import com.flooferland.bizlib.nrbf.NrbfEncoder
+import com.flooferland.bizlib.nrbf.PrimitiveType
+import com.sun.jna.Memory
 import java.io.InputStream
-import com.sun.jna.*
+import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 
 class RshowFormat : IShowFormat {
+    // TODO: Make an interface for the NRBF stuff, so I can use the same functions to read as well
+    override fun write(path: Path, data: RawShowData) {
+        NrbfEncoder(Files.newOutputStream(path)) {
+            serializationHeader()
+            binaryLibrary("Assembly-CSharp")
+            clazz("rshwFormat", arrayOf(
+                NrbfEncoder.ArrayMember("audioData", type = PrimitiveType.Byte),
+                NrbfEncoder.ArrayMember("signalData", type = PrimitiveType.Int32),
+                NrbfEncoder.ArrayMember("videoData", type = PrimitiveType.Byte),
+            ))
+            arraySinglePrimitive(3, data.audio)
+            arraySinglePrimitive(4, data.signal)
+            arraySinglePrimitive(5, data.video)
+        }
+    }
+
     override fun readFile(path: Path): RawShowData {
         val nativeData = BizlibNative.instance?.ReadRshwFile(path.absolutePathString())
         return try {
@@ -55,10 +74,5 @@ class RshowFormat : IShowFormat {
     private fun cleanup(data: BizlibNative.RshwData.ByValue?) {
         runCatching { data?.let { BizlibNative.instance?.FreeRshw(it) } }
             .onFailure { System.err.println("Failed to clean up rshw") }
-    }
-
-    override fun write(path: Path, data: RawShowData) {
-        val data = BizlibNative.RshwData.ByValue(data)
-        BizlibNative.instance?.WriteRshwFile(path.toString(), data)
     }
 }

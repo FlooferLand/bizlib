@@ -1,3 +1,4 @@
+src/test/excluded/
 *.wav
 *.log
 
@@ -47,3 +48,4 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+/test/excluded/64th Birthday.bizshw

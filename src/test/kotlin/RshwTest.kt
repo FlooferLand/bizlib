@@ -45,7 +45,7 @@ class RshwTest : FunSpec({
             data.video.size shouldBeGreaterThanOrEqualTo 0
         }
 
-        val borkedPath = Path("D:\\Animatronics\\Creative Engineering\\Show tapes\\Rubber Biscuit.rshw")
+        val borkedPath = Path("D:\\Animatronics\\Creative Engineering\\Show tapes (RR)\\Rubber Biscuit.rshw")
         test("Test borked rshw").config(enabledIf = { Files.exists(borkedPath) }) {
             val format = RshowFormat()
             val data = format.read(Files.newInputStream(borkedPath))
@@ -67,10 +67,10 @@ class RshwTest : FunSpec({
             Files.write(Path("./test/out.wav"), data.audio)
         }
 
-        /*test("Parse and write a show back out to disk") {
+        test("Parse and write a show back out to disk") {
             val format = RshowFormat()
             val data = format.read(rshowFile)
-            format.write(Path("./test/out.rshw"), data) shouldBe true
-        }*/
+            format.write(Path("./test/out.rshw"), data)
+        }
     }
 })

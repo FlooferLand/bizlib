@@ -6,7 +6,7 @@ data class RawShowData(
     val video: ByteArray = byteArrayOf(),
     val format: String?
 ) {
-    constructor(signal: IntArray, audio: ByteArray, video: ByteArray) : this(signal, audio, video, null)
+    constructor(signal: IntArray = intArrayOf(), audio: ByteArray = byteArrayOf(), video: ByteArray = byteArrayOf()) : this(signal, audio, video, null)
 
     val hasSignal: Boolean
         get() = this.signal.isNotEmpty()

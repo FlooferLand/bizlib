@@ -1,6 +1,8 @@
 ﻿using System.Runtime.InteropServices;
 using System.Formats.Nrbf;
 
+// TODO: Convert signal data from ints to shorts in-place
+
 /** All the rshw arrays and how many elements they have
  * (note: *Len is the array length, not the pointer size in memory)
  */

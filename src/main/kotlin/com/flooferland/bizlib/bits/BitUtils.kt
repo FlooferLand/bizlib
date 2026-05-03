@@ -11,8 +11,11 @@ object BitUtils {
     /** To convert from/to bottom and top drawer bits, this is added to them */
     const val NEXT_DRAWER: UShort = 150u
 
+    private val bitmapCache = mutableMapOf<String, FixtureMap>()
+
     /** Returns null if the bitmap does not exist, or if it could not be parsed */
     fun readBitmap(name: String): FixtureMap? {
+        if (bitmapCache.containsKey(name)) return bitmapCache[name]
         val text = this::class.java.classLoader.getResource("bitmaps/$name.json")?.readText() ?: return null
         val json = runCatching { Json.decodeFromString<Map<String, UShort>>(text) }.getOrNull() ?: return null
         val map = FixtureMap()
@@ -24,6 +27,7 @@ object BitUtils {
             val fixture = map.getOrPut(fixtureName, { Movements() })
             fixture[movementName] = value
         }
+        bitmapCache[name] = map
         return map
     }
 }

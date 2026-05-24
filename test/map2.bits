@@ -1,35 +1,37 @@
-!version 1
-set faz bonnie
-set rae beach_bear
+!version 2
+set faz
+set rae
 
-any jaw {
+rae 166 {
 	flow 1.6
 	rotate "Jaw" x:-25.5
 }
 
-any head_up {
+any 101 {
 	flow ease-in 0.8
 	rotate "Head" x:-25
 	move "Head" x:5.3
+    type servo
 }
 
-any body_lean {
+any 69 {
 	flow 1.0
 	anim "body_lean"
 }
 
-rae guitar_raise, faz arm_bend_l {
+rae 67, faz 67 {
 	flow 1.1
 	anim "guitar_tilt"
 }
 
-faz eyes_left, rae left_eyelid {
+faz 133, rae 113 {
     flow 0.6
     move "LeftEye" x:1
     move "RightEye" x:1
+    type effect
 }
 
-faz eyes_right, rae right_eyelid {
+faz 14td, rae 13td {
     flow 0.6
     move "LeftEye" x:-1
     move "RightEye" x:-1

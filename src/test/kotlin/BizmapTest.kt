@@ -6,20 +6,18 @@ import kotlin.io.path.Path
 
 class BizmapTest : FunSpec({
     context("Test bizmap") {
-        val mapStream = Files.newInputStream(Path("./test/map.bits"))
+        val map1Stream = Files.newInputStream(Path("./test/map.bits"))
+        val map2Stream = Files.newInputStream(Path("./test/map2.bits"))
 
-        test("Bizmap") {
-            val map = BitsMap().load(mapStream)
+        test("Bizmap 1") {
+            val map = BitsMap().load(map1Stream)
 
             val sets = map.fixture.map { (key, value) -> "$key: $value" }.joinToString("\n")
             sets shouldBe "faz: bonnie\nrae: beach_bear"
-
-            /*for ((mapping, bits) in map.bits) {
-                mapping shouldNotBe "any"
-                for ((bit, data) in bits) {
-                    println("$bit: ${data.moves} ${data.rotates}")
-                }
-            }*/
+        }
+        test("Bizmap 2") {
+            val map = BitsMap().load(map2Stream)
+            map.fixture.map { (key, value) -> "$key: $value" }.joinToString("\n")
         }
     }
 })

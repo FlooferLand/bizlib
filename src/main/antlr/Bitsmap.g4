@@ -2,7 +2,7 @@ grammar Bitsmap;
 file: prepStmt* setStmt+ bitStmt* EOF;
 
 // Set statement
-setStmt: 'set' MAP fixture;
+setStmt: 'set' MAP fixture?;
 
 // Bit statement
 bitStmt: mappedMovement (',' mappedMovement)* '{' bitFields+ '}';
@@ -45,7 +45,7 @@ fragment UINT  : DIGIT+ ;
 DRAWER_BIT     : UINT('td'|'bd')          ;
 MAP            : 'faz' | 'rae' | 'any'    ;
 EASING         : 'linear' | 'ease-in'     ;
-MOVE_TYPE      : 'servo' | 'pneumatic'    ;
+MOVE_TYPE      : 'servo' | 'pneumatic' | 'effect' ;
 BOOLEAN        : 'yes' | 'no'             ;
 
 DECIMAL        : '-'? [0-9]+ ('.'[0-9]+) ;

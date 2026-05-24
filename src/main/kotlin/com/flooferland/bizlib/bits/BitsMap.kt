@@ -3,31 +3,45 @@ package com.flooferland.bizlib.bits
 import com.flooferland.bizlib.bits.generated.*
 import org.antlr.v4.kotlinruntime.*
 import java.io.InputStream
+import org.antlr.v4.kotlinruntime.ast.Position
+import kotlin.let
 
 // TODO: Add thorough error throwing to tell the user why something doesn't work
 
 /** NOTE: Constructor will throw an exception if failed parsing */
 class BitsMap {
     private var bitmapFile: BotBitmapFile? = null
+    private var fixtureMap = mutableMapOf<MappingName, FixtureName>()
 
-    private inner class Visitor : BitsmapBaseVisitor<Unit>() {
-        private var currentFixture = mutableMapOf<MappingName, FixtureName>()
-        private val movementsCurrentFixture = mutableMapOf<MappingName, Movements>()
+    private inner class Visitor(val raw: String) : BitsmapBaseVisitor<Unit>() {
+        private val bitmaps = mutableMapOf<MappingName, FixtureMap>()
         private val bitMovements = mutableMapOf<MappingName, MutableMap<UShort, BitMappingData>>()
         private var version: UShort = 0u
+        var errorPosition: Position? = null
+        var warningPosition: Position? = null
 
         override fun defaultResult() = Unit
 
         @Throws(IllegalStateException::class)
         private fun ParserRuleContext.err(message: String): Nothing {
             var message = message
-            this.position?.let { message += " (line ${it.start.line}, column ${it.start.column})" }
+            this.position?.let { pos ->
+                message += " (line ${pos.start.line}, column ${pos.start.column})"
+                message += "\n"
+                message += pos.text(raw).prependIndent(">    ")
+                errorPosition = pos
+            }
             error(message)
         }
 
         private fun ParserRuleContext.warn(message: String) {
             var message = message
-            this.position?.let { message += " (line ${it.start.line}, column ${it.start.column})" }
+            this.position?.let { pos ->
+                message += " (line ${pos.start.line}, column ${pos.start.column})"
+                message += "\n"
+                message += pos.text(raw).prependIndent(">    ")
+                warningPosition = pos
+            }
             println("[Bizlib] WARN: $message")
         }
 
@@ -39,12 +53,12 @@ class BitsMap {
         }
 
         override fun visitSetStmt(ctx: BitsmapParser.SetStmtContext) {
-            val map = ctx.MAP().text
-            val mapping = BitUtils.readBitmap(map) ?: ctx.err("No bitmap registered for map '$map'")
-            val fixtureKey = ctx.fixture().ID().text
-            val movements = mapping[fixtureKey] ?: ctx.err("Fixture '$fixtureKey' wasn't found")
-            movementsCurrentFixture[map] = movements
-            currentFixture[map] = fixtureKey
+            val mapKey = ctx.MAP().text
+
+            val map = BitUtils.readBitmap(mapKey).also { if (it == null) ctx.warn("No bitmap registered for map '$mapKey'") }
+            map?.let { bitmaps[mapKey] = it }
+
+            ctx.fixture()?.let { fixtureMap[mapKey] = it.ID().text }
             super.visitSetStmt(ctx)
         }
 
@@ -52,7 +66,7 @@ class BitsMap {
             val rotates = mutableListOf<RotateCommand>()
             val moves = mutableListOf<MoveCommand>()
             var flow = FlowCommand()
-            var anim = mutableListOf<AnimCommand>()
+            val anim = mutableListOf<AnimCommand>()
             var type: MoveType = MoveType.Default
             var hold: BooleanType = BooleanType.defaultNo()
             var wiggleMul = 1.0
@@ -105,7 +119,7 @@ class BitsMap {
                     type = type,
                     hold = hold,
                     wiggleMul = wiggleMul,
-                    name = currentFixture[mapKey]
+                    name = fixtureMap[mapKey]
                 )
 
                 val moveName = mappedMovement.bit().ID()?.text
@@ -122,23 +136,28 @@ class BitsMap {
                     ctx.err("No movement name/id found for mapping $mapKey (please enter a valid name or the bit ID)")
                 }
 
-                fun add(mapKey: String) {
-                    val map = movementsCurrentFixture[mapKey] ?: ctx.err("No fixture found for mapping $mapKey")
-                    val bit: UShort? = map[moveName] ?: moveId
-                    if (bit == null) ctx.err("The movement '$moveName' doesn't exist in the map '$mapKey'")
-                    val movementsTarget = bitMovements.getOrPut(mapKey, { mutableMapOf() })
+                fun add(mapKey: MappingName, fixtureName: FixtureName? = null, forceNamed: Boolean = false) {
+                    val bit = if (moveId != null && !forceNamed) moveId else {
+                        // Named bits
+                        val fixtureName = fixtureName ?: fixtureMap[mapKey] ?: ctx.err("No fixture was specified for the map '${mapKey}'. No idea what bit to map '${moveName}' to.")
+                        val bitmap = bitmaps[mapKey] ?: ctx.err("No bitmap found for '${mapKey}'. Consider using explicit bitmaps and bit IDs instead of bit names")
+                        bitmap[fixtureName]?.get(moveName) ?: ctx.err("No move with the name '${moveName}' was found")
+                    }
+
+                    val movementsTarget = bitMovements.getOrPut(mapKey) { mutableMapOf() }
                     movementsTarget[bit] = mapping
                 }
-                if (mapKey != "any") {
-                    add(mapKey)
+
+                if (mapKey == "any") {  // Adding all maps
+                    fixtureMap.forEach { (mapKey, fixtureName) -> add(mapKey, fixtureName, forceNamed = true) }
                 } else {
-                    movementsCurrentFixture.keys.forEach { add(it) }
+                    add(mapKey)
                 }
             }
 
             bitmapFile = BotBitmapFile(
                 settings = mapOf(),
-                fixture = currentFixture,
+                fixture = fixtureMap,
                 bits = bitMovements
             )
             super.visitBitStmt(ctx)
@@ -147,13 +166,14 @@ class BitsMap {
 
     /** NOTE: Will throw if failed parsing */
     fun load(stream: InputStream): BotBitmapFile {
-        val lexer = BitsmapLexer(CharStreams.fromStream(stream))
+        val text = stream.bufferedReader().use { it.readText() }
+        val lexer = BitsmapLexer(CharStreams.fromString(text))
         val tokens = CommonTokenStream(lexer)
         val parser = BitsmapParser(tokens)
         val tree = parser.file()
 
-        val visitor = Visitor()
+        val visitor = Visitor(text)
         visitor.visit(tree)
-        return bitmapFile ?: error("Internal error: ${this::bitmapFile.name} as not filled by visitor")
+        return bitmapFile ?: error("Internal error: ${this::bitmapFile.name} was not filled by the end of the visitor. File may be empty?")
     }
 }

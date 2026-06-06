@@ -2,7 +2,7 @@ grammar Bitsmap;
 file: prepStmt* setStmt+ bitStmt* EOF;
 
 // Set statement
-setStmt: 'set' MAP fixture?;
+setStmt: 'set' map fixture?;
 
 // Bit statement
 bitStmt: mappedMovement (',' mappedMovement)* '{' bitFields+ '}';
@@ -29,7 +29,7 @@ prepFields:
 versionPrep: 'version' INTEGER;
 
 // Thingies
-mappedMovement: MAP bit;
+mappedMovement: map bit;
 vec3i: iaxisX? iaxisY? iaxisZ?;
 iaxisX: 'x' ':' num;
 iaxisY: 'y' ':' num;
@@ -37,23 +37,22 @@ iaxisZ: 'z' ':' num;
 bone: STRING;
 bit: ID | INTEGER | DRAWER_BIT;
 fixture: ID;  // for setStmt
+map: ID;
 num: INTEGER | DECIMAL;
 
 // Lexer (NOTE: ORDER MATTERS!!)
 fragment DIGIT : [0-9] ;
 fragment UINT  : DIGIT+ ;
 DRAWER_BIT     : UINT('td'|'bd')          ;
-MAP            : 'faz' | 'rae' | 'any'    ;
 EASING         : 'linear' | 'ease-in'     ;
 MOVE_TYPE      : 'servo' | 'pneumatic' | 'effect' ;
 BOOLEAN        : 'yes' | 'no'             ;
 
-DECIMAL        : '-'? [0-9]+ ('.'[0-9]+) ;
+DECIMAL        : '-'? [0-9]+ ('.'[0-9]+)  ;
 INTEGER        : '-'? UINT                ;
 
 STRING         : '"' (~["\r\n])* '"'      ;
-ID             : [a-zA-Z_][a-zA-Z0-9_]+   ;
+ID             : [a-zA-Z_]+               ;
 
 WS             : [ \t\r\n]+ -> skip       ;
 LINE_COMMENT   : '#' ~[\r\n]+ -> channel(HIDDEN) ;
-EOL            : [\r\n]+                  ;

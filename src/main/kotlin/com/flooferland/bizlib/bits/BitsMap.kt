@@ -53,9 +53,9 @@ class BitsMap {
         }
 
         override fun visitSetStmt(ctx: BitsmapParser.SetStmtContext) {
-            val mapKey = ctx.MAP().text
+            val mapKey = ctx.map().text
 
-            val map = BitUtils.readBitmap(mapKey).also { if (it == null) ctx.warn("No bitmap registered for map '$mapKey'") }
+            val map = BitUtils.readBitmap(mapKey)
             map?.let { bitmaps[mapKey] = it }
 
             ctx.fixture()?.let { fixtureMap[mapKey] = it.ID().text }
@@ -110,7 +110,7 @@ class BitsMap {
 
             // Adding the movements
             for (mappedMovement in ctx.mappedMovement()) {
-                val mapKey = mappedMovement.MAP().text
+                val mapKey = mappedMovement.map().text
                 val mapping = BitMappingData(
                     flow = flow,
                     rotates = rotates,
@@ -136,8 +136,8 @@ class BitsMap {
                     ctx.err("No movement name/id found for mapping $mapKey (please enter a valid name or the bit ID)")
                 }
 
-                fun add(mapKey: MappingName, fixtureName: FixtureName? = null, forceNamed: Boolean = false) {
-                    val bit = if (moveId != null && !forceNamed) moveId else {
+                fun add(mapKey: MappingName, fixtureName: FixtureName? = null) {
+                    val bit = if (moveId != null) moveId else {
                         // Named bits
                         val fixtureName = fixtureName ?: fixtureMap[mapKey] ?: ctx.err("No fixture was specified for the map '${mapKey}'. No idea what bit to map '${moveName}' to.")
                         val bitmap = bitmaps[mapKey] ?: ctx.err("No bitmap found for '${mapKey}'. Consider using explicit bitmaps and bit IDs instead of bit names")
@@ -149,7 +149,7 @@ class BitsMap {
                 }
 
                 if (mapKey == "any") {  // Adding all maps
-                    fixtureMap.forEach { (mapKey, fixtureName) -> add(mapKey, fixtureName, forceNamed = true) }
+                    fixtureMap.forEach { (mapKey, fixtureName) -> add(mapKey, fixtureName) }
                 } else {
                     add(mapKey)
                 }

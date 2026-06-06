@@ -1,0 +1,78 @@
+1,Wolfman,Mouth
+2,Wolfman,Eyes Left
+3,Wolfman,Left Eyelid
+4,Wolfman,Right Eyelid
+5,Wolfman,Left Ear
+6,Wolfman,Right Ear
+7,Wolfman,Head Up
+8,Wolfman,Head Down
+9,Wolfman,Head Left
+10,Wolfman,Left Arm Raise
+11,Wolfman,Left Arm Twist
+12,Wolfman,Left Elbow
+13,Wolfman,Body Left
+14,Wolfman,Body Lean
+15,Wolfman,Mic Swing
+16,,
+17,Fats,Mouth
+18,Fats,Left Eyelid
+19,Fats,Right Eyelid
+20,Fats,Head Left
+21,Fats,Head Tilt Left
+22,Fats,Left Elbow
+23,Fats,Left Arm Swing
+24,Fats,Right Elbow
+25,Fats,Body Lean
+26,Fats,Foot Tap
+27,Dingo,Mouth
+28,Dingo,Left Eyelid
+29,Dingo,Right Eyelid
+30,Dingo,Left Ear
+31,Dingo,Right Ear
+32,Dingo,Head Up
+33,Dingo,Head Left
+34,Dingo,Head Right
+35,Dingo,Right Elbow
+36,Dingo,Left Elbow
+37,Dingo,Body Lean
+38,Beach Bear,Mouth
+39,Beach Bear,Eyes Cross
+40,Beach Bear,Left Eyelid
+41,Beach Bear,Right Eyelid
+42,Beach Bear,Head Up
+43,Beach Bear,Head Left
+44,Beach Bear,Head Right
+45,Beach Bear,Guitar Raise
+46,Beach Bear,Guitar Slide
+47,Beach Bear,Strum
+48,Beach Bear,Body Lean Forward
+49,Beach Bear,Foot Tap
+50,Queenie,Mouth
+51,Queenie,Left Eyelid
+52,Queenie,Right Eyelid
+53,Queenie,Left Ear
+54,Queenie,Right Ear
+55,Queenie,Head Up
+56,Queenie,Head Left
+57,Queenie,Head Right
+58,Queenie,Left Arm Raise
+59,Queenie,Right Arm Raise
+60,Queenie,Left Elbow
+61,Queenie,Right Elbow
+62,Queenie,Left Wrist
+63,Queenie,Right Wrist
+64,Queenie,Body Lean
+65,Queenie,Body Right
+66,Spotlights,Wolfman Spot
+67,Spotlights,Fats Spot
+68,Spotlights,Dingo Spot
+69,Spotlights,Beach Spot
+70,Spotlights,Queenie Spot
+71,Stage Lights,Top Floods Green
+72,Stage Lights,Top Floods Red
+73,Stage Lights,Top Floods Blue
+74,Stage Lights,Top Floods Amber
+75,Curtains,Center Stage Close
+76,Curtains,Center Stage Open
+77,Curtains,Stage Right Close (Wolfman)
+78,Curtains,Stage Right Open (Wolfman)

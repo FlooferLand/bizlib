@@ -10,6 +10,7 @@ typealias FixtureMap = HashMap<FixtureName, Movements>
 object BitUtils {
     /** To convert from/to bottom and top drawer bits, this is added to them */
     const val NEXT_DRAWER: UShort = 150u
+    const val DRAWER_MAX: UShort = 300u
 
     private val bitmapCache = mutableMapOf<String, FixtureMap>()
 

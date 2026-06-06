@@ -95,6 +95,8 @@ tasks.register<BitmapGeneratorTask>("buildBitmapFiles") {
     outputs.dir(bitmapsGeneratedDir)
     outputs.dir(vscodeBitmapsDir)
 
+    outputs.upToDateWhen { false }
+
     this.bitmapDir = bitmapsDir
     this.bitmapsGeneratedDir = bitmapsGeneratedDir
 

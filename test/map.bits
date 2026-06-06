@@ -2,7 +2,7 @@
 set faz bonnie
 set rae beach_bear
 
-any jaw {
+rae 16bd, faz 33 {
 	flow 1.6
 	rotate "Jaw" x:-25.5
 }
@@ -18,7 +18,7 @@ any body_lean {
 	anim "body_lean"
 }
 
-rae guitar_raise, faz arm_bend_l {
+rae guitar_slide, faz arm_bend_l {
 	flow 1.1
 	anim "guitar_tilt"
 }

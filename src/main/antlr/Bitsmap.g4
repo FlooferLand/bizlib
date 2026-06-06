@@ -52,7 +52,7 @@ DECIMAL        : '-'? [0-9]+ ('.'[0-9]+)  ;
 INTEGER        : '-'? UINT                ;
 
 STRING         : '"' (~["\r\n])* '"'      ;
-ID             : [a-zA-Z_]+               ;
+ID             : [a-zA-Z_][a-zA-Z0-9_]+   ;
 
 WS             : [ \t\r\n]+ -> skip       ;
 LINE_COMMENT   : '#' ~[\r\n]+ -> channel(HIDDEN) ;

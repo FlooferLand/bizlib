@@ -3,6 +3,7 @@ package com.flooferland.bizlib.bits
 import com.flooferland.bizlib.bits.generated.*
 import org.antlr.v4.kotlinruntime.*
 import java.io.InputStream
+import jdk.internal.joptsimple.internal.Messages.message
 import org.antlr.v4.kotlinruntime.ast.Position
 import kotlin.let
 
@@ -12,6 +13,9 @@ import kotlin.let
 class BitsMap {
     private var bitmapFile: BotBitmapFile? = null
     private var fixtureMap = mutableMapOf<MappingName, FixtureName>()
+
+    var errorCallback: (message: String, position: Position?) -> Unit = { message, position -> }
+    var warnHandler: (message: String, position: Position?) -> Unit = { message, position -> println("[Bizlib] WARN: $message") }
 
     private inner class Visitor(val raw: String) : BitsmapBaseVisitor<Unit>() {
         private val bitmaps = mutableMapOf<MappingName, FixtureMap>()
@@ -32,6 +36,7 @@ class BitsMap {
                 message += pos.text(raw).prependIndent(">    ")
                 errorPosition = pos
             }
+            errorCallback(message, position)
             error(message)
         }
 
@@ -43,7 +48,7 @@ class BitsMap {
                 message += pos.text(raw).prependIndent(">    ")
                 warningPosition = pos
             }
-            println("[Bizlib] WARN: $message")
+            warnHandler(message, position)
         }
 
         override fun visitPrepFields(ctx: BitsmapParser.PrepFieldsContext) {
@@ -141,10 +146,15 @@ class BitsMap {
                     val bit = if (moveId != null) moveId else {
                         // Named bits
                         val fixtureName = fixtureName ?: fixtureMap[mapKey] ?: ctx.err("No fixture was specified for the map '${mapKey}'. No idea what bit to map '${moveName}' to.")
+                        val oldErr = "A movement from the old bitmap was found being used for ${mapKey}.${fixtureName}. Please migrate your addon to use numerical bit IDs, or the new names!"
                         val fixtures = bitmaps[mapKey]
-                            ?: oldBitmaps["${mapKey}_old"]?.also { ctx.warn("Old bitmap found. Migrate your addon to use numerical bit IDs!") }
+                            ?: oldBitmaps[mapKey]?.also { ctx.warn(oldErr) }
                             ?: ctx.err("No bitmap found for '${mapKey}'. Consider using explicit bitmaps and bit IDs instead of bit names")
-                        fixtures[fixtureName]?.get(moveName) ?: ctx.err("No move with the name '${moveName}' was found")
+
+                        // TODO: This error is thrown, when it should be picking the old bitchart. Wtf?
+                        fixtures[fixtureName]?.get(moveName)
+                            ?: oldBitmaps[mapKey]?.get(fixtureName)?.get(moveName)?.also { ctx.warn(oldErr) }
+                            ?: ctx.err("No move with the name '${moveName}' was found for fixture '${fixtureName}'")
                     }
 
                     val movementsTarget = bitMovements.getOrPut(mapKey) { mutableMapOf() }

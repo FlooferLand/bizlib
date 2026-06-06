@@ -14,41 +14,51 @@ class BitsMap {
     private var bitmapFile: BotBitmapFile? = null
     private var fixtureMap = mutableMapOf<MappingName, FixtureName>()
 
-    var errorCallback: (message: String, position: Position?) -> Unit = { message, position -> }
-    var warnHandler: (message: String, position: Position?) -> Unit = { message, position -> println("[Bizlib] WARN: $message") }
+    var errorCallback: (message: LogMessage) -> Unit = { message -> }
+    var warnHandler: (message: LogMessage) -> Unit = { message -> println("[Bizlib] WARN: $message") }
+
+    data class LogMessage(val text: String, var position: Pos? = null, var context: String? = null) {
+        data class Point(val line: Int, val column: Int)
+        data class Pos(val start: Point, val end: Point) {
+            override fun toString() = "line ${start.line}, column ${start.column}"
+        }
+        override fun toString(): String {
+            var message = text
+            if (position != null && context != null) {
+                message += " ($position)"
+                message += "\n"
+                message += context
+            }
+            return message
+        }
+    }
 
     private inner class Visitor(val raw: String) : BitsmapBaseVisitor<Unit>() {
         private val bitmaps = mutableMapOf<MappingName, FixtureMap>()
         private val oldBitmaps = mutableMapOf<MappingName, FixtureMap>()
         private val bitMovements = mutableMapOf<MappingName, MutableMap<UShort, BitMappingData>>()
         private var version: UShort = 0u
-        var errorPosition: Position? = null
-        var warningPosition: Position? = null
 
         override fun defaultResult() = Unit
 
         @Throws(IllegalStateException::class)
         private fun ParserRuleContext.err(message: String): Nothing {
-            var message = message
+            val message = LogMessage(message)
             this.position?.let { pos ->
-                message += " (line ${pos.start.line}, column ${pos.start.column})"
-                message += "\n"
-                message += pos.text(raw).prependIndent(">    ")
-                errorPosition = pos
+                message.position = LogMessage.Pos(LogMessage.Point(pos.start.line, pos.start.column), LogMessage.Point(pos.end.line, pos.end.column))
+                message.context = pos.text(raw).prependIndent(">    ")
             }
-            errorCallback(message, position)
+            errorCallback(message)
             error(message)
         }
 
         private fun ParserRuleContext.warn(message: String) {
-            var message = message
+            val message = LogMessage(message)
             this.position?.let { pos ->
-                message += " (line ${pos.start.line}, column ${pos.start.column})"
-                message += "\n"
-                message += pos.text(raw).prependIndent(">    ")
-                warningPosition = pos
+                message.position = LogMessage.Pos(LogMessage.Point(pos.start.line, pos.start.column), LogMessage.Point(pos.end.line, pos.end.column))
+                message.context = pos.text(raw).prependIndent(">    ")
             }
-            warnHandler(message, position)
+            warnHandler(message)
         }
 
         override fun visitPrepFields(ctx: BitsmapParser.PrepFieldsContext) {
@@ -146,7 +156,7 @@ class BitsMap {
                     val bit = if (moveId != null) moveId else {
                         // Named bits
                         val fixtureName = fixtureName ?: fixtureMap[mapKey] ?: ctx.err("No fixture was specified for the map '${mapKey}'. No idea what bit to map '${moveName}' to.")
-                        val oldErr = "A movement from the old bitmap was found being used for ${mapKey}.${fixtureName}. Please migrate your addon to use numerical bit IDs, or the new names!"
+                        val oldErr = "A movement from the old bitmap was found being used for '${mapKey}.${fixtureName}'. Please migrate your addon to use numerical bit IDs, or the new names!"
                         val fixtures = bitmaps[mapKey]
                             ?: oldBitmaps[mapKey]?.also { ctx.warn(oldErr) }
                             ?: ctx.err("No bitmap found for '${mapKey}'. Consider using explicit bitmaps and bit IDs instead of bit names")

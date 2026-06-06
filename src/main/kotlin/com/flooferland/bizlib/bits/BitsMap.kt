@@ -15,6 +15,7 @@ class BitsMap {
 
     private inner class Visitor(val raw: String) : BitsmapBaseVisitor<Unit>() {
         private val bitmaps = mutableMapOf<MappingName, FixtureMap>()
+        private val oldBitmaps = mutableMapOf<MappingName, FixtureMap>()
         private val bitMovements = mutableMapOf<MappingName, MutableMap<UShort, BitMappingData>>()
         private var version: UShort = 0u
         var errorPosition: Position? = null
@@ -55,8 +56,8 @@ class BitsMap {
         override fun visitSetStmt(ctx: BitsmapParser.SetStmtContext) {
             val mapKey = ctx.map().text
 
-            val map = BitUtils.readBitmap(mapKey)
-            map?.let { bitmaps[mapKey] = it }
+            BitUtils.readBitmap(mapKey)?.let { bitmaps[mapKey] = it }
+            BitUtils.readBitmap("${mapKey}_old")?.let { oldBitmaps[mapKey] = it }
 
             ctx.fixture()?.let { fixtureMap[mapKey] = it.ID().text }
             super.visitSetStmt(ctx)
@@ -140,8 +141,10 @@ class BitsMap {
                     val bit = if (moveId != null) moveId else {
                         // Named bits
                         val fixtureName = fixtureName ?: fixtureMap[mapKey] ?: ctx.err("No fixture was specified for the map '${mapKey}'. No idea what bit to map '${moveName}' to.")
-                        val bitmap = bitmaps[mapKey] ?: ctx.err("No bitmap found for '${mapKey}'. Consider using explicit bitmaps and bit IDs instead of bit names")
-                        bitmap[fixtureName]?.get(moveName) ?: ctx.err("No move with the name '${moveName}' was found")
+                        val fixtures = bitmaps[mapKey]
+                            ?: oldBitmaps["${mapKey}_old"]?.also { ctx.warn("Old bitmap found. Migrate your addon to use numerical bit IDs!") }
+                            ?: ctx.err("No bitmap found for '${mapKey}'. Consider using explicit bitmaps and bit IDs instead of bit names")
+                        fixtures[fixtureName]?.get(moveName) ?: ctx.err("No move with the name '${moveName}' was found")
                     }
 
                     val movementsTarget = bitMovements.getOrPut(mapKey) { mutableMapOf() }

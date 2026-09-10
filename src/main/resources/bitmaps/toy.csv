@@ -1,0 +1,299 @@
+1,Toy Bonnie,Jaw
+2,Toy Bonnie,Leg RF
+3,Toy Bonnie,Leg LF
+4,Toy Bonnie,Leg RB
+5,Toy Bonnie,Leg LB
+6,Toy Bonnie,Body Turn R
+7,Toy Bonnie,Body Turn L
+8,Toy Bonnie,Body Lean F
+9,Toy Bonnie,Body Lean B
+10,Toy Bonnie,Ear R
+11,Toy Bonnie,Ear L
+12,Toy Bonnie,Eye Flip
+13,Toy Bonnie,Eye L Left
+14,Toy Bonnie,Eye L Right
+15,Toy Bonnie,Eye R Left
+16,Toy Bonnie,Eye R Right
+17,Toy Bonnie,Eyelids
+18,Toy Bonnie,Head B
+19,Toy Bonnie,Head F
+20,Toy Bonnie,Head Tilt L
+21,Toy Bonnie,Head Tilt R
+22,Toy Bonnie,Head Turn L
+23,Toy Bonnie,Head Turn R
+24,Toy Bonnie,Arm R Twist
+25,Toy Bonnie,Arm R Up
+26,Toy Bonnie,Forearm R Twist
+27,Toy Bonnie,Forearm R Bend
+28,Toy Bonnie,Wrist Right L
+29,Toy Bonnie,Wrist Right R
+30,Toy Bonnie,Wrist Up R
+31,Toy Bonnie,Pointer R
+32,Toy Bonnie,Fingers R
+33,Toy Bonnie,Arm L Twist
+34,Toy Bonnie,Forearm L Twist L
+35,Toy Bonnie,Forearm L Twist R
+36,Toy Bonnie,Forearm Bend L
+37,Toy Bonnie,Wrist L Twist L
+38,Toy Bonnie,Wrist L Twist R
+39,Toy Bonnie,Wrist Up L
+40,Toy Bonnie,Pointer L
+41,Toy Bonnie,Fingers L
+42,Balloon Boy,Jaw
+43,Balloon Boy,Body Turn R
+44,Balloon Boy,Body Turn L
+45,Balloon Boy,Body Lean F
+46,Balloon Boy,Body Lean B
+47,Balloon Boy,Eye Flip
+48,Balloon Boy,Eye L Left
+49,Balloon Boy,Eye L Right
+50,Balloon Boy,Eye R Left
+51,Balloon Boy,Eye R Right
+52,Balloon Boy,Eyelids
+53,Balloon Boy,Head B
+54,Balloon Boy,Head F
+55,Balloon Boy,Head Tilt L
+56,Balloon Boy,Head Tilt R
+57,Balloon Boy,Head Turn L
+58,Balloon Boy,Head Turn R
+59,Balloon Boy,Arm R Twist B
+60,Balloon Boy,Arm R Twist F
+61,Balloon Boy,Arm R Down
+62,Balloon Boy,Forearm R Twist
+63,Balloon Boy,Forearm R Up
+64,Balloon Boy,Arm L Twist B
+65,Balloon Boy,Arm L Twist F
+66,Balloon Boy,Arm L Down
+67,Balloon Boy,Forearm L Twist
+68,Balloon Boy,Forearm L Up
+69,Toy Chica,Jaw
+70,Toy Chica,Leg RF
+71,Toy Chica,Leg LF
+72,Toy Chica,Leg RB
+73,Toy Chica,Leg LB
+74,Toy Chica,Body Turn R
+75,Toy Chica,Body Turn L
+76,Toy Chica,Body Lean F
+77,Toy Chica,Body Lean B
+78,Toy Chica,Eye Flip
+79,Toy Chica,Eye L Left
+80,Toy Chica,Eye L Right
+81,Toy Chica,Eye R Left
+82,Toy Chica,Eye R Right
+83,Toy Chica,Eyelids
+84,Toy Chica,Head B
+85,Toy Chica,Head F
+86,Toy Chica,Head Tilt L
+87,Toy Chica,Head Tilt R
+88,Toy Chica,Head Turn L
+89,Toy Chica,Head Turn R
+90,Toy Chica,Arm R Twist
+91,Toy Chica,Arm R Up
+92,Toy Chica,Forearm R Twist
+93,Toy Chica,Forearm R Bend
+94,Toy Chica,Wrist R Twist L
+95,Toy Chica,Wrist R Twist R
+96,Toy Chica,Wrist R Up
+97,Toy Chica,Wrist R Down
+98,Toy Chica,Arm L Twist
+99,Toy Chica,Arm L Up
+100,Toy Chica,Forearm L Twist
+101,Toy Chica,Forearm L Bend
+102,Toy Chica,Wrist L Twist R
+103,Toy Chica,Wrist L Twist L
+104,Toy Chica,Wrist L Up
+105,Toy Chica,Wrist L Down
+106,Rainbow,1
+107,Rainbow,2
+108,Rainbow,3
+109,Rainbow,4
+110,Rainbow,5
+111,Rainbow,6
+112,Rainbow,7
+113,Rainbow,8
+114,Rainbow,9
+115,Rainbow,10
+116,Rainbow,11
+117,Rainbow,12
+118,Rainbow,13
+119,Rainbow,14
+120,,
+121,,
+122,,
+123,,
+124,,
+125,,
+126,,
+127,,
+128,,
+129,,
+130,,
+131,,
+132,,
+133,,
+134,,
+135,,
+136,,
+137,,
+138,,
+139,,
+140,,
+141,,
+142,,
+143,,
+144,,
+145,,
+146,,
+147,,
+148,,
+149,,
+150,,
+151,Spotlight,Toy Bonnie
+152,Spotlight,Balloon Boy
+153,Spotlight,Toy Freddy
+154,Spotlight,Toy Chica
+155,Stage Lights,Red Flood
+156,Stage Lights,Yellow Flood
+157,Stage Lights,Green Flood
+158,Stage Lights,Blue Flood
+159,Stage Lights,Purple Flood
+160,Stage Lights,Star GOBO R
+161,Stage Lights,Star GOBO L
+162,Stage Lights,Toy Bonnie Back
+163,Stage Lights,Toy Freddy Back
+164,Stage Lights,Toy Chica Back
+165,Stage Lights,BFlood Blue
+166,Stage Lights,BFlood Red
+167,Stage Lights,BFlood Green 1
+168,Stage Lights,BFlood Green 2
+169,Stage Lights,BFlood Tellow
+170,Spotlight,Rainbow
+171,,
+172,,
+173,,
+174,,
+175,Low Pressure,LP Toy Freddy
+176,Low Pressure,LP Toy Bonnie
+177,Low Pressure,LP Toy Chica
+178,Low Pressure,LP Foxy
+179,Low Pressure,LP Balloon Boy
+180,,
+181,,
+182,,
+183,,
+184,,
+185,,
+186,,
+187,,
+188,,
+189,,
+190,,
+191,,
+192,,
+193,,
+194,,
+195,,
+196,,
+197,,
+198,,
+199,,
+200,,
+201,Toy Freddy,Jaw
+202,Toy Freddy,Leg RF
+203,Toy Freddy,Leg LF
+204,Toy Freddy,Leg RB
+205,Toy Freddy,Leg LB
+206,Toy Freddy,Body Turn R
+207,Toy Freddy,Body Turn L
+208,Toy Freddy,Body Lean F
+209,Toy Freddy,Body Lean B
+210,Toy Freddy,Hat
+211,,
+212,Toy Freddy,Eye Flip
+213,Toy Freddy,Eye L Left
+214,Toy Freddy,Eye L Right
+215,Toy Freddy,Eye R Left
+216,Toy Freddy,Eye R Right
+217,Toy Freddy,Eyelids
+218,Toy Freddy,Head B
+219,Toy Freddy,Head F
+220,Toy Freddy,Head Tilt L
+221,Toy Freddy,Head Tilt R
+222,Toy Freddy,Head Turn L
+223,Toy Freddy,Head Turn R
+224,Toy Freddy,Arm R Twist
+225,Toy Freddy,Arm R Up
+226,Toy Freddy,Forearm R Twist
+227,Toy Freddy,Forearm R Bend
+228,Toy Freddy,Wrist R Twist L
+229,Toy Freddy,Wrist R Twist R
+230,Toy Freddy,Wrist R Up
+231,Toy Freddy,Wrist R Down
+232,Toy Freddy,Index R 1
+233,Toy Freddy,Index R 2
+234,Toy Freddy,Arm L Twist
+235,Toy Freddy,Arm L Up
+236,Toy Freddy,Forearm L Twist
+237,Toy Freddy,Forearm L Bend
+238,Toy Freddy,Wrist L Twist L
+239,Toy Freddy,Wrist L Twist R
+240,Toy Freddy,Wrist L Up
+241,Toy Freddy,Wrist L Down
+242,Toy Freddy,Thumb L 1
+243,Toy Freddy,Thumb L 2
+244,Toy Freddy,Index L 1
+245,Toy Freddy,Index L 2
+246,Toy Freddy,Middle L 1
+247,Toy Freddy,Middle L 2
+248,Toy Freddy,Pinky L 1
+249,Toy Freddy,Pinky L 2
+250,Curtains,Curtain Open
+251,Curtains,Curtain Close
+252,Special,TV Right
+253,Special ,TV Left
+254,,
+255,,
+256,,
+257,,
+258,,
+259,,
+260,,
+261,,
+262,,
+263,,
+264,,
+265,,
+266,,
+267,,
+268,,
+269,,
+270,,
+271,,
+272,,
+273,,
+274,,
+275,,
+276,,
+277,,
+278,,
+279,,
+280,,
+281,,
+282,,
+283,,
+284,,
+285,,
+286,,
+287,,
+288,,
+289,,
+290,,
+291,,
+292,,
+293,,
+294,,
+295,,
+296,,
+297,,
+298,,
+299,,

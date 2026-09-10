@@ -45,7 +45,7 @@ abstract class BitmapGeneratorTask : DefaultTask() {
                 }
                 globalBit = if (bottomDrawer) localBit + 150 else localBit
 
-                var fixture = split[1].trim().lowercase()
+                val fixture = split[1].trim().lowercase()
                 var name = split[2].trim().lowercase()
                 if (fixture.isEmpty()) continue
                 if (name.isEmpty() || name == "blank" || "n/a" in name) continue
@@ -61,7 +61,7 @@ abstract class BitmapGeneratorTask : DefaultTask() {
 
                 if (name !in keys) keys.add(name)
                 out.append("\t\"$name\": $globalBit")
-                if (i != lines.size - 1)
+                if (i < lines.size - 1)
                     out.appendLine(",")
                 else
                     out.appendLine()

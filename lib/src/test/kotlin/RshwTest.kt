@@ -6,13 +6,14 @@ import io.kotest.matchers.shouldBe
 import java.io.InputStream
 import java.nio.file.Files
 import kotlin.io.path.Path
+import kotlin.io.path.div
 
 class RshwTest : FunSpec({
     context("Read an rshow file from disk") {
         lateinit var rshowFile: InputStream
 
         beforeTest {
-            rshowFile = Files.newInputStream(Path("./test/1 - Mouth.rshw"))
+            rshowFile = Files.newInputStream(Shared.testDir / "1 - Mouth.rshw")
         }
 
         test("Parse a sample file") {
@@ -64,13 +65,13 @@ class RshwTest : FunSpec({
         test("Parse and write out show audio to disk") {
             val format = RshowFormat()
             val data = format.read(rshowFile)
-            Files.write(Path("./test/out.wav"), data.audio)
+            Files.write(Shared.testDir / "out.wav", data.audio)
         }
 
         test("Parse and write a show back out to disk") {
             val format = RshowFormat()
             val data = format.read(rshowFile)
-            format.write(Files.newOutputStream(Path("./test/out.rshw")), data)
+            format.write(Files.newOutputStream(Shared.testDir / "out.rshw"), data)
         }
     }
 })

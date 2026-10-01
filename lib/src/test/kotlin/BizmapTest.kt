@@ -3,12 +3,13 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import java.nio.file.Files
 import kotlin.io.path.Path
+import kotlin.io.path.div
 
 class BizmapTest : FunSpec({
     context("Test bizmap") {
-        val map1Stream = Files.newInputStream(Path("./test/map.bits"))
-        val map2Stream = Files.newInputStream(Path("./test/map2.bits"))
-        val mapOldStream = Files.newInputStream(Path("./test/mapOld.bits"))
+        val map1Stream = Files.newInputStream(Shared.testDir / "map.bits")
+        val map2Stream = Files.newInputStream(Shared.testDir / "map2.bits")
+        val mapOldStream = Files.newInputStream(Shared.testDir / "mapOld.bits")
 
         test("Bizmap 1") {
             val map = BitsMap().load(map1Stream)

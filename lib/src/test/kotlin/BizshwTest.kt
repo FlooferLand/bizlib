@@ -24,9 +24,9 @@ class BizshwTest : FunSpec({
                 video = rshowData.video,
             )
 
-            format.write(Path("./test/excluded/64th Birthday.bizshw"), data)
+            format.write(Shared.testDir / "64th Birthday.bizshw", data)
 
-            val newData = format.readFile(Path("./test/excluded/64th Birthday.bizshw"))
+            val newData = format.readFile(Shared.testDir / "excluded/64th Birthday.bizshw")
             newData.audio.size shouldBeExactly data.audio.size
             newData.signal.size shouldBeExactly data.signal.size
             newData.video.size shouldBeExactly data.video.size

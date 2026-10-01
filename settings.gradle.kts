@@ -7,12 +7,13 @@ pluginManagement {
     val antlr_kotlin: String by settings
 
     plugins {
-        kotlin("jvm") version(kotlin)
-        id("io.kotest") version(kotest)
-        id("com.strumenta.antlr-kotlin") version(antlr_kotlin)
+        kotlin("jvm") version (kotlin)
+        id("io.kotest") version (kotest)
+        id("com.strumenta.antlr-kotlin") version (antlr_kotlin)
         antlr
         `maven-publish`
     }
 }
 
 rootProject.name = "bizlib"
+include("lib", "server")

@@ -3,19 +3,17 @@ package com.flooferland.bizlib.bits
 import com.flooferland.bizlib.bits.generated.*
 import org.antlr.v4.kotlinruntime.*
 import java.io.InputStream
-import jdk.internal.joptsimple.internal.Messages.message
-import org.antlr.v4.kotlinruntime.ast.Position
 import kotlin.let
 
 // TODO: Add thorough error throwing to tell the user why something doesn't work
 
 /** NOTE: Constructor will throw an exception if failed parsing */
 class BitsMap {
-    private var bitmapFile: BotBitmapFile? = null
-    private var fixtureMap = mutableMapOf<MappingName, FixtureName>()
+    var bitmapFile: BotBitmapFile? = null
+    var fixtureMap = mutableMapOf<MappingName, FixtureName>()
 
     var errorCallback: (message: LogMessage) -> Unit = { message -> }
-    var warnHandler: (message: LogMessage) -> Unit = { message -> println("[Bizlib] WARN: $message") }
+    var warnHandler: (message: LogMessage) -> Unit = { message -> System.err.println("[Bizlib] WARN: $message") }
 
     data class LogMessage(val text: String, var position: Pos? = null, var context: String? = null) {
         data class Point(val line: Int, val column: Int)
@@ -33,7 +31,7 @@ class BitsMap {
         }
     }
 
-    private inner class Visitor(val raw: String) : BitsmapBaseVisitor<Unit>() {
+    inner class Visitor(val raw: String) : BitsmapBaseVisitor<Unit>() {
         private val bitmaps = mutableMapOf<MappingName, FixtureMap>()
         private val oldBitmaps = mutableMapOf<MappingName, FixtureMap>()
         private val bitMovements = mutableMapOf<MappingName, MutableMap<UShort, BitMappingData>>()

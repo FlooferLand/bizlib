@@ -1,16 +1,9 @@
 import com.strumenta.antlrkotlin.gradle.AntlrKotlinTask
+import org.gradle.declarative.dsl.schema.FqName.Empty.packageName
 import org.gradle.kotlin.dsl.sourceSets
 
 group = "com.flooferland"
 version = "1.0.3"
-
-val kotest: String by properties
-val antlr: String by properties
-@Suppress("PropertyName")
-val kotlin_serialization: String by properties
-@Suppress("PropertyName")
-val antlr_kotlin: String by properties
-val jna: String by properties
 
 plugins {
     kotlin("jvm")
@@ -24,23 +17,26 @@ repositories {
     mavenCentral()
 }
 
+fun dep(name: String) = (project.property(name) as? String)!!
 dependencies {
     // https://mvnrepository.com/artifact/org.antlr/antlr4
-    antlr("org.antlr:antlr4:${antlr}")
-    implementation("com.strumenta:antlr-kotlin-runtime:${antlr_kotlin}")
-
-    // Kotlin / Kotest
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${kotlin_serialization}")
-    testImplementation("io.kotest:kotest-runner-junit5-jvm:${kotest}")
-    testImplementation("io.kotest:kotest-framework-engine:${kotest}")
-    testImplementation("io.kotest:kotest-assertions-core:${kotest}")
+    antlr("org.antlr:antlr4:${dep("antlr")}")
+    implementation("com.strumenta:antlr-kotlin-runtime:${dep("antlr_kotlin")}")
 
     // JNA
-    implementation("net.java.dev.jna:jna:${jna}")
+    implementation("net.java.dev.jna:jna:${dep("jna")}")
+
+    // Kotlin / Kotest
+    val kotest = dep("kotest")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${dep("kotlin_serialization")}")
+    testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotest")
+    testImplementation("io.kotest:kotest-framework-engine:$kotest")
+    testImplementation("io.kotest:kotest-assertions-core:$kotest")
 }
 
 val generateKotlinGrammarSource = tasks.register<AntlrKotlinTask>("generateKotlinGrammarSource") {
     dependsOn("cleanGenerateKotlinGrammarSource")
+    description = "Compiles ANTLR grammar files"
 
     source = fileTree(layout.projectDirectory.dir("src/main/antlr")) {
         include("**/*.g4")
@@ -86,39 +82,16 @@ tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
 
-tasks.register<BitmapGeneratorTask>("buildBitmapFiles") {
-    val bitmapsDir = file("src/main/resources/bitmaps")
-    val bitmapsGeneratedDir = file("build/generated/resources/bitmaps")
-    val vscodeBitmapsDir = file("showbiz-vscode/data/bitmaps")
-
-    inputs.dir(bitmapsDir)
-    outputs.dir(bitmapsGeneratedDir)
-    outputs.dir(vscodeBitmapsDir)
-
-    outputs.upToDateWhen { false }
-
-    this.bitmapDir = bitmapsDir
-    this.bitmapsGeneratedDir = bitmapsGeneratedDir
-
-    doLast {
-        copy {
-            from(bitmapsGeneratedDir)
-            into(vscodeBitmapsDir)
-            include("*.json")
-        }
-    }
+val buildBitmapFiles = tasks.register<BitmapGeneratorTask>("buildBitmapFiles") {
+    description = "Builds and compiles bitmap files from CSV"
+    bitmapDir.set(layout.projectDirectory.dir("src/main/resources/bitmaps"))
+    bitmapsGeneratedDir.set(layout.buildDirectory.dir("generated/resources/bitmaps"))
+    sourceGeneratedDir.set(layout.buildDirectory.dir("generated/kotlin/main"))
 }
 
-tasks.processResources {
-    exclude("*.dbg")
-    dependsOn("buildBitmapFiles")
-}
-tasks.processTestResources {
-    dependsOn("buildBitmapFiles")
-}
-
-tasks.build {
-    dependsOn("buildBitmapFiles")
+sourceSets.main {
+    kotlin.srcDir(buildBitmapFiles.map { it.sourceGeneratedDir })
+    resources.srcDir(buildBitmapFiles.map { it.bitmapsGeneratedDir })
 }
 
 publishing {

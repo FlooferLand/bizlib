@@ -3,25 +3,45 @@ import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.io.File
-import org.gradle.internal.impldep.org.codehaus.plexus.util.FileUtils.filename
+import org.gradle.api.file.DirectoryProperty
 
 abstract class BitmapGeneratorTask : DefaultTask() {
     @get:InputDirectory
-    lateinit var bitmapDir: File
+    abstract val bitmapDir: DirectoryProperty
 
     @get:OutputDirectory
-    lateinit var bitmapsGeneratedDir: File
+    abstract val bitmapsGeneratedDir: DirectoryProperty
+
+    @get:OutputDirectory
+    abstract val sourceGeneratedDir: DirectoryProperty
 
     @TaskAction
     fun generate() {
-        val files = bitmapDir.listFiles()
+        val inputDir = bitmapDir.get().asFile
+        val generatedResDir = bitmapsGeneratedDir.get().asFile
+        val kotlinFile = sourceGeneratedDir.get().asFile.resolve("CompiledBitmaps.kt")
+
+        val bitmapFiles = inputDir.listFiles()
             ?.asSequence().orEmpty()
             .filter { it.name.endsWith(".csv") }
-            .map { it.name }
-            .sorted()
+            .sortedBy { it.name }
+        compileBitmaps(inputDir, generatedResDir, bitmapFiles)
+        compileKotlin(kotlinFile, bitmapFiles)
+    }
 
-        for (fileName in files) {
-            val file = File(bitmapDir, fileName)
+    fun compileKotlin(kotlinFile: File, bitmapFiles: Sequence<File>) {
+        val kotlin = """
+            object CompiledBitmaps {
+                val ids = hashSetOf(${bitmapFiles.joinToString(", ") { "\"${it.nameWithoutExtension}\"" }})
+            }
+        """.trimIndent()
+        kotlinFile.parentFile?.mkdirs()
+        kotlinFile.writeText(kotlin)
+    }
+
+    fun compileBitmaps(inputDir: File, generatedResDir: File, files: Sequence<File>) {
+        for (file in files) {
+            val file = File(inputDir, file.name)
             val lines = file.readLines()
             val keys = mutableSetOf<String>()
             var localBit = 1
@@ -68,7 +88,7 @@ abstract class BitmapGeneratorTask : DefaultTask() {
             }
             out.appendLine("}")
 
-            val outPath = File(bitmapsGeneratedDir, "${file.nameWithoutExtension}.json")
+            val outPath = File(generatedResDir, "${file.nameWithoutExtension}.json")
             outPath.writeText(out.toString())
         }
     }

@@ -1,5 +1,3 @@
-import sun.jvmstat.monitor.MonitoredVmUtil.mainClass
-
 plugins {
     kotlin("jvm")
     application

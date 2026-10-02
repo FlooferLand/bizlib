@@ -7,7 +7,6 @@ import java.util.concurrent.CompletableFuture
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.ParserRuleContext
-import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.tree.Trees
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
@@ -17,14 +16,11 @@ import kotlin.collections.filter
 import kotlin.collections.flatMap
 import kotlin.collections.mapNotNull
 
-typealias Provider = (ctx: ParserRuleContext, doc: Document) -> ProviderValue
-data class ProviderValue(var severity: DiagnosticSeverity = DiagnosticSeverity.Information, var entries: List<String>)
-
 class BitsMapTextDocumentService : TextDocumentService {
     var client: LanguageClient? = null
-    val documents = mutableMapOf<String, String>()
+    val documents = mutableMapOf<String, Document>()
     val providers: Map<Int, Provider> = mapOf(
-        BitsmapParser.RULE_map to { ctx, _ -> ProviderValue(
+        BitsmapParser.RULE_map to { _, _ -> ProviderValue(
             severity = DiagnosticSeverity.Warning,
             entries = CompiledBitmaps.ids.toList()
         ) },
@@ -34,6 +30,16 @@ class BitsMapTextDocumentService : TextDocumentService {
                 ?.let { BitUtils.readBitmap(it)?.keys?.toList() }
                 .orEmpty()
         ) },
+        BitsmapParser.RULE_bit to { ctx, doc ->
+            val map = ctx.closest<BitsmapParser.MappedMovementContext>()?.map()?.text
+            val movements = map?.let { doc.movements(it) }.orEmpty()
+            ProviderValue(
+                severity = DiagnosticSeverity.Error,
+                entries = movements.keys.sorted(),
+                inserts = movements.mapValues { it.value.toString() },
+                alsoValid = { doc.bitId(it) in 0..BitUtils.DRAWER_MAX.toInt() },
+            )
+        },
     )
 
     override fun didOpen(params: DidOpenTextDocumentParams) {
@@ -49,32 +55,32 @@ class BitsMapTextDocumentService : TextDocumentService {
     }
 
     override fun didClose(params: DidCloseTextDocumentParams) {
-        documents.remove(params.textDocument.uri)
+        params.textDocument?.uri?.let { documents.remove(it) }
     }
 
     private fun setDocument(uri: String, content: String?) {
         if (content == null) return
-        documents[uri] = content
 
         val errors = BitsMapErrorListener()
         val lexer = BitsmapLexer(CharStreams.fromString(content)).apply { removeErrorListeners(); addErrorListener(errors) }
         val parser = BitsmapParser(CommonTokenStream(lexer)).apply { removeErrorListeners(); addErrorListener(errors) }
 
-        errors.diagnostics += validate(parser.file())
+        val document = Document(parser.file(), content)
+        documents[uri] = document
+        errors.diagnostics += validate(document)
         client?.publishDiagnostics(PublishDiagnosticsParams(uri, errors.diagnostics))
     }
 
-    private fun validate(tree: ParseTree): List<Diagnostic> {
-        val doc = Document(tree)
+    private fun validate(document: Document): List<Diagnostic> {
         return providers.flatMap { (ruleIndex, provider) ->
-            Trees.findAllRuleNodes(tree, ruleIndex)
+            Trees.findAllRuleNodes(document.tree, ruleIndex)
                 .filterIsInstance<ParserRuleContext>()
                 .filter { it.start != null && it.stop != null && it.exception == null }
                 .mapNotNull { ctx ->
-                    val result = provider(ctx, doc)
+                    val result = provider(ctx, document)
                     if (result.entries.isEmpty()) return@mapNotNull null
                     val text = ctx.text.trim('"')
-                    if (text in result.entries) return@mapNotNull null
+                    if (text in result.entries || result.alsoValid(text)) return@mapNotNull null
 
                     val hint = if (result.entries.size <= 2) " Expected one of: ${result.entries.joinToString()}." else ""
                     Diagnostic(
@@ -93,7 +99,7 @@ class BitsMapTextDocumentService : TextDocumentService {
         val document = documents[params.textDocument.uri]
             ?: return CompletableFuture.completedFuture(Either.forLeft(emptyList()))
 
-        val suggestions = completeAt(document, getOffset(document, params.position))
+        val suggestions = completeAt(document.text, params.position)
         return CompletableFuture.completedFuture(Either.forLeft(suggestions))
     }
 
@@ -107,16 +113,72 @@ class BitsMapTextDocumentService : TextDocumentService {
         return (lineStart + position.character).coerceAtMost(text.length)
     }
 
-    private fun completeAt(text: String, offset: Int): List<CompletionItem> {
+    private fun completeAt(text: String, position: Position): List<CompletionItem> {
+        val isWord: (Char) -> Boolean = { it.isLetterOrDigit() || it == '-' || it == '_' }
+        val offset = getOffset(text, position)
         val before = text.substring(0, offset)
-        val prefix = before.takeLastWhile { it.isLetterOrDigit() || it == '-' || it == '_' }
-        val probe = Probe(this, before.dropLast(prefix.length))
+        val prefix = before.takeLastWhile(isWord)
+        val suffix = text.substring(offset).takeWhile(isWord)
+        val probe = TreeProbe(this, before.dropLast(prefix.length))
+        val replace = Range(
+            Position(position.line, position.character - prefix.length),
+            Position(position.line, position.character + suffix.length),
+        )
 
-        fun buildItems(labels: List<String>, kind: CompletionItemKind) = labels
-            .filter { it.startsWith(prefix, ignoreCase = true) }
-            .map { CompletionItem(it).apply { this.kind = kind } }
+        fun items(labels: List<String>, kind: CompletionItemKind, inserts: Map<String, String> = emptyMap()) = labels
+            .filter { it.startsWith(prefix, ignoreCase = true) || inserts[it]?.startsWith(prefix, ignoreCase = true) == true }
+            .map { label ->
+                val insert = inserts[label] ?: label
+                CompletionItem(label).apply {
+                    this.kind = kind
+                    filterText = if (insert != label) "$insert $label" else label
+                    textEdit = Either.forLeft(TextEdit(replace, insert))
+                    if (insert != label) detail = insert
+                }
+            }
 
-        return buildItems(probe.allowedKeywords, CompletionItemKind.Keyword) +
-                buildItems(probe.values(Document(probe.tree)), CompletionItemKind.EnumMember)
+        return items(probe.allowedKeywords, CompletionItemKind.Keyword) +
+                probe.values(Document(probe.tree, before)).flatMap { items(it.entries, CompletionItemKind.EnumMember, it.inserts) }
+    }
+
+    override fun semanticTokensFull(params: SemanticTokensParams?): CompletableFuture<SemanticTokens?>? {
+        val document = params?.textDocument?.uri?.let { documents[it] } ?: return CompletableFuture.completedFuture(null)
+        val tokens = CommonTokenStream(BitsmapLexer(CharStreams.fromString(document.text))).apply { fill() }.tokens
+
+        val data = mutableListOf<Int>()
+        var linePos = 0
+        var charPos = 0
+        for (token in tokens.filter { it.type != BitsmapLexer.EOF }) {
+            val type = BitsMapHighlightToken.get(token.text) ?: when (token.type) {
+                BitsmapLexer.STRING -> BitsMapHighlightToken.String
+                BitsmapLexer.BOOLEAN -> BitsMapHighlightToken.Boolean
+                BitsmapLexer.INTEGER, BitsmapLexer.DECIMAL, BitsmapLexer.DRAWER_BIT -> BitsMapHighlightToken.Number
+                else -> if (BitsmapParser.VOCABULARY.getLiteralName(token.type) != null) BitsMapHighlightToken.Keyword else BitsMapHighlightToken.Variable
+            }
+
+            val lineDelta = token.line - 1 - linePos
+            val charDelta = if (lineDelta == 0) token.charPositionInLine - charPos else token.charPositionInLine
+            data.addAll(listOf(lineDelta, charDelta, token.text?.length ?: 0, type.ordinal, 0))
+            linePos = token.line - 1; charPos = token.charPositionInLine
+        }
+        return CompletableFuture.completedFuture(SemanticTokens(data))
+    }
+
+    override fun hover(params: HoverParams): CompletableFuture<Hover?>? {
+        val document = documents[params.textDocument.uri] ?: return CompletableFuture.completedFuture(null)
+
+        val (movement, bit) = Trees.findAllRuleNodes(document.tree, BitsmapParser.RULE_mappedMovement)
+            .filterIsInstance<BitsmapParser.MappedMovementContext>()
+            .firstNotNullOfOrNull { ctx -> ctx.bit()?.takeIf { params.position in it.range() }?.let { ctx to it } }
+            ?: return CompletableFuture.completedFuture(null)
+
+        val map = movement.map().text
+        val movements = document.movements(map)
+        val id = document.bitId(bit.text) ?: movements[bit.text]?.toInt() ?: return CompletableFuture.completedFuture(null)
+        val names = movements.filterValues { it.toInt() == id }.keys
+        if (names.isEmpty()) return CompletableFuture.completedFuture(null)
+
+        val markdown = "`${names.joinToString(" / ")}` - bit $id\n\n`$map.${document.fixtures[map]}`"
+        return CompletableFuture.completedFuture(Hover(MarkupContent(MarkupKind.MARKDOWN, markdown), bit.range()))
     }
 }

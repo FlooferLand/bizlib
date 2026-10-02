@@ -16,4 +16,4 @@ pluginManagement {
 }
 
 rootProject.name = "bizlib"
-include("lib", "server")
+include("lib", "server", "showbiz-intellij")

@@ -6,6 +6,8 @@ import org.eclipse.lsp4j.DidChangeConfigurationParams
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams
 import org.eclipse.lsp4j.InitializeParams
 import org.eclipse.lsp4j.InitializeResult
+import org.eclipse.lsp4j.SemanticTokensLegend
+import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions
 import org.eclipse.lsp4j.ServerCapabilities
 import org.eclipse.lsp4j.TextDocumentSyncKind
 import org.eclipse.lsp4j.jsonrpc.messages.Either
@@ -21,6 +23,11 @@ class BitsMapLanguageServer : LanguageServer, LanguageClientAware {
         val capabilities = ServerCapabilities().apply {
             textDocumentSync = Either.forLeft(TextDocumentSyncKind.Full)
             completionProvider = CompletionOptions(false, listOf(".", " "))
+            semanticTokensProvider = SemanticTokensWithRegistrationOptions().apply {
+                legend = SemanticTokensLegend(BitsMapHighlightToken.ids, emptyList())
+                full = Either.forLeft(true)
+            }
+            hoverProvider = Either.forLeft(true)
         }
         return CompletableFuture.completedFuture(InitializeResult(capabilities))
     }

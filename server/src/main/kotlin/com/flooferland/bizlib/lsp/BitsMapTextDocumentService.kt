@@ -151,9 +151,9 @@ class BitsMapTextDocumentService : TextDocumentService {
         for (token in tokens.filter { it.type != BitsmapLexer.EOF }) {
             val type = BitsMapHighlightToken.get(token.text) ?: when (token.type) {
                 BitsmapLexer.STRING -> BitsMapHighlightToken.String
-                BitsmapLexer.BOOLEAN -> BitsMapHighlightToken.Boolean
                 BitsmapLexer.INTEGER, BitsmapLexer.DECIMAL, BitsmapLexer.DRAWER_BIT -> BitsMapHighlightToken.Number
-                else -> if (BitsmapParser.VOCABULARY.getLiteralName(token.type) != null) BitsMapHighlightToken.Keyword else BitsMapHighlightToken.Variable
+                BitsmapLexer.LINE_COMMENT -> BitsMapHighlightToken.Comment
+                else -> if (BitsmapParser.VOCABULARY.getLiteralName(token.type) != null) BitsMapHighlightToken.Keyword else BitsMapHighlightToken.Property
             }
 
             val lineDelta = token.line - 1 - linePos

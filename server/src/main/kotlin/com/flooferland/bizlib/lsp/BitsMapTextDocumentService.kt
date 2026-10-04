@@ -19,28 +19,41 @@ import kotlin.collections.mapNotNull
 class BitsMapTextDocumentService : TextDocumentService {
     var client: LanguageClient? = null
     val documents = mutableMapOf<String, Document>()
-    val providers: Map<Int, Provider> = mapOf(
-        BitsmapParser.RULE_map to { _, _ -> ProviderValue(
-            severity = DiagnosticSeverity.Warning,
-            entries = CompiledBitmaps.ids.toList()
-        ) },
-        BitsmapParser.RULE_fixture to { ctx, _ -> ProviderValue(
-            severity = DiagnosticSeverity.Error,
-            entries = ctx.closest<BitsmapParser.SetStmtContext>()?.map()?.text
-                ?.let { BitUtils.readBitmap(it)?.keys?.toList() }
-                .orEmpty()
-        ) },
+
+    val completions: Map<Int, CompletionProvider> = mapOf(
+        BitsmapParser.RULE_map to { _, _ -> CompletionProviderValue(CompiledBitmaps.ids.toList()) },
+        BitsmapParser.RULE_fixture to { ctx, doc -> CompletionProviderValue(doc.findFixtures(ctx, includeOld = false)) },
         BitsmapParser.RULE_bit to { ctx, doc ->
-            val map = ctx.closest<BitsmapParser.MappedMovementContext>()?.map()?.text
-            val movements = map?.let { doc.movements(it) }.orEmpty()
-            ProviderValue(
-                severity = DiagnosticSeverity.Error,
+            val statement = ctx.closest<BitsmapParser.MappedMovementContext>()
+            val map = statement?.map()?.text
+            val movements = map?.let { doc.movements(it, includeOld = true) }.orEmpty()
+            CompletionProviderValue(
                 entries = movements.keys.sorted(),
-                inserts = movements.mapValues { it.value.toString() },
-                alsoValid = { doc.bitId(it) in 0..BitUtils.DRAWER_MAX.toInt() },
+                inserts = movements.mapValues { it.value.toString() }
             )
+        }
+    )
+    val diagnosers: Map<Int, DiagnosticProvider> = mapOf(
+        BitsmapParser.RULE_map to { ctx, _ ->
+            val ids = CompiledBitmaps.ids.toList()
+            val isAny = ctx.text == "any" && ctx.parent is BitsmapParser.MappedMovementContext
+            if (ctx.text in ids || isAny) null
+            else unknown("map", ctx.text, ids) to DiagnosticSeverity.Warning
+        },
+        BitsmapParser.RULE_fixture to { ctx, doc ->
+            val valid = doc.findFixtures(ctx, includeOld = false)
+            if (valid.isEmpty() || ctx.text in valid) null
+            else unknown("fixture", ctx.text, valid) to DiagnosticSeverity.Error
+        },
+        BitsmapParser.RULE_bit to { ctx, doc ->
+            when (doc.bitId(ctx.text)) {
+                null -> "Name IDs are no longer supported. Use a bit number" to DiagnosticSeverity.Error
+                !in 1u.toUShort()..BitUtils.DRAWER_MAX -> "Bit ID '${ctx.text}' is out of range (1 to ${BitUtils.DRAWER_MAX})." to DiagnosticSeverity.Error
+                else -> null
+            }
         },
     )
+
 
     override fun didOpen(params: DidOpenTextDocumentParams) {
         setDocument(params.textDocument.uri, params.textDocument.text)
@@ -72,25 +85,15 @@ class BitsMapTextDocumentService : TextDocumentService {
     }
 
     private fun validate(document: Document): List<Diagnostic> {
-        return providers.flatMap { (ruleIndex, provider) ->
+        return diagnosers.flatMap { (ruleIndex, validator) ->
             Trees.findAllRuleNodes(document.tree, ruleIndex)
                 .filterIsInstance<ParserRuleContext>()
                 .filter { it.start != null && it.stop != null && it.exception == null }
                 .mapNotNull { ctx ->
-                    val result = provider(ctx, document)
-                    if (result.entries.isEmpty()) return@mapNotNull null
-                    val text = ctx.text.trim('"')
-                    if (text in result.entries || result.alsoValid(text)) return@mapNotNull null
-
-                    val hint = if (result.entries.size <= 2) " Expected one of: ${result.entries.joinToString()}." else ""
-                    Diagnostic(
-                        Range(
-                            Position(ctx.start.line - 1, ctx.start.charPositionInLine),
-                            Position(ctx.stop.line - 1, ctx.stop.charPositionInLine + ctx.stop.text.length)
-                        ),
-                        "Unknown ${BitsmapParser.ruleNames[ctx.ruleIndex]} '$text'.$hint",
-                        result.severity, "bitsmap"
-                    )
+                    val receiver = DiagnosticReceiver()
+                    validator(receiver, ctx, document)?.let { (message, severity) ->
+                        Diagnostic(ctx.range(), message, severity, "bitsmap")
+                    }
                 }
         }
     }
@@ -173,12 +176,11 @@ class BitsMapTextDocumentService : TextDocumentService {
             ?: return CompletableFuture.completedFuture(null)
 
         val map = movement.map().text
-        val movements = document.movements(map)
-        val id = document.bitId(bit.text) ?: movements[bit.text]?.toInt() ?: return CompletableFuture.completedFuture(null)
-        val names = movements.filterValues { it.toInt() == id }.keys
-        if (names.isEmpty()) return CompletableFuture.completedFuture(null)
+        val movements = document.movements(map, includeOld = true)
+        val id = document.bitId(bit.text) ?: movements[bit.text]
+        val names = movements.filterValues { it.toInt() == id?.toInt() }.keys
 
-        val markdown = "`${names.joinToString(" / ")}` - bit $id\n\n`$map.${document.fixtures[map]}`"
+        val markdown = if (names.isEmpty()) "Bit $id" else "`${names.joinToString(" / ")}` - bit $id\n\n`$map.${document.fixtures[map]}`"
         return CompletableFuture.completedFuture(Hover(MarkupContent(MarkupKind.MARKDOWN, markdown), bit.range()))
     }
 }

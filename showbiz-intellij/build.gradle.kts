@@ -27,3 +27,7 @@ dependencies {
         plugin("com.redhat.devtools.lsp4ij", "0.19.1")
     }
 }
+
+tasks.jar {
+    from(project(":server").extensions.getByType<SourceSetContainer>()["main"].output)
+}

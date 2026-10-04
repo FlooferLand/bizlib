@@ -57,11 +57,11 @@ class TreeProbe(val service: BitsMapTextDocumentService, beforeCaret: String) {
     }
 
     /** Looks at what rule failed first and searches through */
-    fun values(doc: Document): List<ProviderValue> {
+    fun values(doc: Document): List<CompletionProviderValue> {
         val lookups = errorRule?.parents().orEmpty().map { setOf(it.ruleIndex) to it } +
                 candidates.map { (ctx, next) -> next.rules to ctx }
         return lookups
-            .map { (rules, ctx) -> rules.mapNotNull { service.providers[it]?.invoke(ctx, doc) }.filter { it.entries.isNotEmpty() } }
+            .map { (rules, ctx) -> rules.mapNotNull { service.completions[it]?.invoke(ctx, doc) }.filter { it.entries.isNotEmpty() } }
             .firstOrNull { it.isNotEmpty() }
             .orEmpty()
     }

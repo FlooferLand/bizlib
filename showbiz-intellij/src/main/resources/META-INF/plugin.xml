@@ -1,5 +1,5 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
-<idea-plugin>
+<idea-plugin visibility="public" require-restart="false">
     <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
     <id>com.flooferland.showbiz</id>
 
@@ -14,7 +14,7 @@
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
     <description><![CDATA[
         <p>Official addon for the Showbiz mod.</p>
-        <p>Adds syntax hightlightingm, autocompletion, and error checking for the bitsmap file format.</p>
+        <p>Adds syntax hightlighting, autocompletion, and error checking for the bitsmap (.bits) file format.</p>
     ]]></description>
 
     <!-- Product and plugin compatibility requirements.

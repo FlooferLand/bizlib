@@ -19,8 +19,11 @@ class BitsMapErrorListener : BaseErrorListener() {
         )
 
         val (message, severity) = when {
+            // Enforcing xyz ordering
             token?.text in setOf("x", "y", "z") && parser?.context is BitsmapParser.BitStmtContext ->
                 "Coordinates must be in the following order: x, y, z" to DiagnosticSeverity.Error
+            parser?.context is BitsmapParser.BitContext && (parser.context as BitsmapParser.BitContext).ID() != null ->
+                "Name IDs are no longer supported. Use a bit number" to DiagnosticSeverity.Error
             else ->
                 (msg ?: "Syntax error") to DiagnosticSeverity.Error
         }

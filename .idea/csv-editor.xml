@@ -31,6 +31,20 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\lib\src\main\resources\faz_old.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\lib\src\main\resources\rae_old.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
       </map>
     </option>
   </component>

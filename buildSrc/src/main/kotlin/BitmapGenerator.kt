@@ -30,9 +30,10 @@ abstract class BitmapGeneratorTask : DefaultTask() {
     }
 
     fun compileKotlin(kotlinFile: File, bitmapFiles: Sequence<File>) {
+        val names = bitmapFiles.map { it.nameWithoutExtension }.filter { !it.endsWith("_old") }
         val kotlin = """
             object CompiledBitmaps {
-                val ids = hashSetOf(${bitmapFiles.joinToString(", ") { "\"${it.nameWithoutExtension}\"" }})
+                val ids = hashSetOf(${names.joinToString(", ") { "\"${it}\"" }})
             }
         """.trimIndent()
         kotlinFile.parentFile?.mkdirs()

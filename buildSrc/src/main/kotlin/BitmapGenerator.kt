@@ -91,6 +91,7 @@ abstract class BitmapGeneratorTask : DefaultTask() {
 
             val outPath = File(generatedResDir, "${file.nameWithoutExtension}.json")
             outPath.writeText(out.toString())
+            println("Built ${keys.size} keys for '${file.nameWithoutExtension}'")
         }
     }
 }

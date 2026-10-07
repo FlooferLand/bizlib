@@ -154,14 +154,14 @@ class BitsMap {
                     val bit = if (moveId != null) moveId else {
                         // Named bits
                         val fixtureName = fixtureName ?: fixtureMap[mapKey] ?: ctx.err("No fixture was specified for the map '${mapKey}'. No idea what bit to map '${moveName}' to.")
-                        val oldErr = "A movement from the old bitmap was found being used for '${mapKey}.${fixtureName}'. Please migrate your addon to use numerical bit IDs, or the new names!"
+                        val oldWarn = "A movement from the old bitmap was found being used for '${mapKey}.${fixtureName}'. Please migrate your addon to use numerical bit IDs, or the new names!"
                         val fixtures = bitmaps[mapKey]
-                            ?: oldBitmaps[mapKey]?.also { ctx.warn(oldErr) }
+                            ?: oldBitmaps[mapKey]?.also { ctx.warn(oldWarn) }
                             ?: ctx.err("No bitmap found for '${mapKey}'. Consider using explicit bitmaps and bit IDs instead of bit names")
 
                         // TODO: This error is thrown, when it should be picking the old bitchart. Wtf?
                         fixtures[fixtureName]?.get(moveName)
-                            ?: oldBitmaps[mapKey]?.get(fixtureName)?.get(moveName)?.also { ctx.warn(oldErr) }
+                            ?: oldBitmaps[mapKey]?.get(fixtureName)?.get(moveName)?.also { ctx.warn(oldWarn) }
                             ?: ctx.err("No move with the name '${moveName}' was found for fixture '${fixtureName}'")
                     }
 

@@ -10,7 +10,21 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\lib\src\main\resources\bitmaps\faz_old.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\lib\src\main\resources\bitmaps\rae.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\lib\src\main\resources\bitmaps\rae_old.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />

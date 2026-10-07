@@ -1,0 +1,13 @@
+set rae stage_lights
+
+rae rainbow1_red {
+    flow 3.0
+    move "neon" z:-0.4
+    move "off" z:0.4
+}
+
+rae 76td {
+    flow 3.0
+    move "neon" z:-0.4
+    move "off" z:0.4
+}

@@ -9,6 +9,7 @@ class BizmapTest : FunSpec({
     context("Test bizmap") {
         val map1Stream = Files.newInputStream(Shared.testDir / "map.bits")
         val map2Stream = Files.newInputStream(Shared.testDir / "map2.bits")
+        val map3Stream = Files.newInputStream(Shared.testDir / "map3.bits")
         val mapOldStream = Files.newInputStream(Shared.testDir / "mapOld.bits")
 
         test("Bizmap 1") {
@@ -19,6 +20,10 @@ class BizmapTest : FunSpec({
         }
         test("Bizmap 2") {
             val map = BitsMap().load(map2Stream)
+            map.fixture.map { (key, value) -> "$key: $value" }.joinToString("\n")
+        }
+        test("Bizmap 3") {
+            val map = BitsMap().load(map3Stream)
             map.fixture.map { (key, value) -> "$key: $value" }.joinToString("\n")
         }
         test("Bizmap Old") {

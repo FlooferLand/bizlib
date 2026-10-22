@@ -31,14 +31,14 @@ enum class Easing {
 }
 
 data class FlowCommand(
-    val speedIn: Double?,
-    val speedOut: Double?,
+    val flowIn: Double?,
+    val flowOut: Double?,
     val gravityIn: Double?,
     val gravityOut: Double?,
-    val slamIn: Double?,
-    val slamOut: Double?,
-    val slamInSpeed: Double?,
-    val slamOutSpeed: Double?,
+    val smashIn: Double?,
+    val smashOut: Double?,
+    val smashInSpeed: Double?,
+    val smashOutSpeed: Double?,
     val easing: Easing = Easing.Default
 )
 

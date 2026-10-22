@@ -111,19 +111,19 @@ class FlowParams : ParamSet("flow") {
     val gravOut by num("grav_out", 1.0).optional()
 
     val smashIn by num("smash_in", 0.0).optional()
-    val smashout by num("smash_out", 0.0).optional()
+    val smashOut by num("smash_out", 0.0).optional()
     val smashInSpeed by num("smash_in_speed", 0.0).optional()
     val smashOutSpeed by num("smash_out_speed", 0.0).optional()
 
     fun toCommand(): FlowCommand? = FlowCommand(
-        speedIn = flowIn?.value ?: return null,
-        speedOut = flowOut?.value ?: return null,
+        flowIn = flowIn?.value ?: return null,
+        flowOut = flowOut?.value ?: return null,
         gravityIn = gravIn?.value,
         gravityOut = gravOut?.value,
-        slamIn = smashIn?.value,
-        slamOut = smashout?.value,
-        slamInSpeed = smashInSpeed?.value,
-        slamOutSpeed = smashOutSpeed?.value,
+        smashIn = smashIn?.value,
+        smashOut = smashOut?.value,
+        smashInSpeed = smashInSpeed?.value,
+        smashOutSpeed = smashOutSpeed?.value,
         easing = Easing.Default,  // TODO: Add easing
     )
 }

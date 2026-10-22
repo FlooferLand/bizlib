@@ -2,7 +2,6 @@ plugins {
     kotlin("jvm")
     application
     id("com.gradleup.shadow") version "9.6.1"
-    id("com.strumenta.antlr-kotlin")
     antlr
 }
 
@@ -19,7 +18,6 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.antlr/antlr4
     antlr("org.antlr:antlr4:${dep("antlr")}")
-    implementation("com.strumenta:antlr-kotlin-runtime:${dep("antlr_kotlin")}")
 
     // LSP4J
     val ksp4j = dep("lsp4j")

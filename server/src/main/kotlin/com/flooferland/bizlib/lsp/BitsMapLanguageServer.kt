@@ -1,5 +1,6 @@
 package com.flooferland.bizlib.lsp
 
+import com.flooferland.bizlib.bits.ParamSet
 import java.util.concurrent.CompletableFuture
 import org.eclipse.lsp4j.CompletionOptions
 import org.eclipse.lsp4j.DidChangeConfigurationParams
@@ -20,9 +21,10 @@ class BitsMapLanguageServer : LanguageServer, LanguageClientAware {
     private val textService = BitsMapTextDocumentService()
 
     override fun initialize(params: InitializeParams): CompletableFuture<InitializeResult> {
+        ParamSet.init()
         val capabilities = ServerCapabilities().apply {
             textDocumentSync = Either.forLeft(TextDocumentSyncKind.Full)
-            completionProvider = CompletionOptions(false, listOf(".", " "))
+            completionProvider = CompletionOptions(false, listOf(".", " ", "\n"))
             semanticTokensProvider = SemanticTokensWithRegistrationOptions().apply {
                 legend = SemanticTokensLegend(BitsMapHighlightToken.ids, emptyList())
                 full = Either.forLeft(true)

@@ -1,9 +1,12 @@
 package com.flooferland.bizlib.bits
 
-import com.flooferland.bizlib.bits.generated.*
-import org.antlr.v4.kotlinruntime.*
+import com.flooferland.bizlib.bits.generated.BitsmapBaseVisitor
+import com.flooferland.bizlib.bits.generated.BitsmapLexer
+import com.flooferland.bizlib.bits.generated.BitsmapParser
+import com.flooferland.bizlib.position
+import org.antlr.v4.runtime.*
+import org.antlr.v4.runtime.tree.ParseTree
 import java.io.InputStream
-import kotlin.let
 
 // TODO: Add thorough error throwing to tell the user why something doesn't work
 
@@ -15,7 +18,9 @@ class BitsMap {
     var errorCallback: (message: LogMessage) -> Unit = { message -> }
     var warnHandler: (message: LogMessage) -> Unit = { message -> System.err.println("[Bizlib] WARN: $message") }
 
-    data class LogMessage(val text: String, var position: Pos? = null, var context: String? = null) {
+    enum class Severity { Error, Warning }
+
+    data class LogMessage(val text: String, var position: Pos? = null, var context: String? = null, val severity: Severity = Severity.Error) {
         data class Point(val line: Int, val column: Int)
         data class Pos(val start: Point, val end: Point) {
             override fun toString() = "line ${start.line}, column ${start.column}"
@@ -31,7 +36,9 @@ class BitsMap {
         }
     }
 
-    inner class Visitor(val raw: String) : BitsmapBaseVisitor<Unit>() {
+    data class Analysis(val tree: ParseTree, val messages: List<LogMessage>)
+
+    inner class Visitor(val raw: String, private val messages: MutableList<LogMessage>) : BitsmapBaseVisitor<Unit>() {
         private val bitmaps = mutableMapOf<MappingName, FixtureMap>()
         private val oldBitmaps = mutableMapOf<MappingName, FixtureMap>()
         private val bitMovements = mutableMapOf<MappingName, MutableMap<UShort, BitMappingData>>()
@@ -39,25 +46,16 @@ class BitsMap {
 
         override fun defaultResult() = Unit
 
-        @Throws(IllegalStateException::class)
-        private fun ParserRuleContext.err(message: String): Nothing {
-            val message = LogMessage(message)
-            this.position?.let { pos ->
+        private fun report(ctx: ParserRuleContext, text: String, severity: Severity = Severity.Error) {
+            val message = LogMessage(text, severity = severity)
+            ctx.position?.let { pos ->
                 message.position = LogMessage.Pos(LogMessage.Point(pos.start.line, pos.start.column), LogMessage.Point(pos.end.line, pos.end.column))
                 message.context = pos.text(raw).prependIndent(">    ")
             }
-            errorCallback(message)
-            error(message)
+            messages += message
         }
 
-        private fun ParserRuleContext.warn(message: String) {
-            val message = LogMessage(message)
-            this.position?.let { pos ->
-                message.position = LogMessage.Pos(LogMessage.Point(pos.start.line, pos.start.column), LogMessage.Point(pos.end.line, pos.end.column))
-                message.context = pos.text(raw).prependIndent(">    ")
-            }
-            warnHandler(message)
-        }
+        private fun fail(ctx: ParserRuleContext, message: String) = report(ctx, message)
 
         override fun visitPrepFields(ctx: BitsmapParser.PrepFieldsContext) {
             ctx.versionPrep()?.let { versionPrep ->
@@ -71,44 +69,73 @@ class BitsMap {
 
             BitUtils.readBitmap(mapKey)?.let { bitmaps[mapKey] = it }
             BitUtils.readBitmap("${mapKey}_old")?.let { oldBitmaps[mapKey] = it }
+            if (mapKey !in bitmaps && mapKey !in oldBitmaps) report(ctx.map(), "Unknown map '$mapKey'.", Severity.Warning)
 
-            ctx.fixture()?.let { fixtureMap[mapKey] = it.ID().text }
+            ctx.fixture()?.let { fixture ->
+                val fixtureName = fixture.ID().text
+                val current = bitmaps[mapKey]?.keys.orEmpty()
+                val legacy = oldBitmaps[mapKey]?.keys.orEmpty()
+                when {
+                    fixtureName in current || (current + legacy).isEmpty() -> Unit
+                    fixtureName in legacy -> report(fixture, "Fixture '$fixtureName' only exists in the old bitmap. Please migrate to the new fixture names.", Severity.Warning)
+                    else -> report(fixture, "Unknown fixture '$fixtureName'." + if (current.size in 1..2) " Expected one of: ${current.joinToString()}." else "")
+                }
+                fixtureMap[mapKey] = fixtureName
+            }
             super.visitSetStmt(ctx)
         }
 
         override fun visitBitStmt(ctx: BitsmapParser.BitStmtContext) {
             val rotates = mutableListOf<RotateCommand>()
             val moves = mutableListOf<MoveCommand>()
-            var flow = FlowCommand()
             val anim = mutableListOf<AnimCommand>()
+            var flow: FlowCommand? = null
+            var oldFlow: OldFlowCommand? = null
             var type: MoveType = MoveType.Default
             var hold: BooleanType = BooleanType.defaultNo()
             var wiggleMul = 1.0
             for (field in ctx.bitFields()) {
                 when {
                     field.flowField() != null -> {
-                        flow = FlowCommand(
-                            speed = field.flowField()!!.num().text.toDoubleOrNull() ?: 0.0,
-                            easing = when (field.flowField()!!.EASING()?.text) {
-                                "ease-in" -> Easing.EaseIn
-                                "linear" -> Easing.Linear
-                                else -> Easing.Default
-                            }
-                        )
+                        val flowCtx = field.flowField()!!
+                        val new = flowCtx.param()
+                        val old = flowCtx.oldFlowFieldParams()
+                        if (new.isNotEmpty()) {
+                            val params = FlowParams().apply { fill(flowCtx, new, ::fail) }
+                            flow = params.toCommand()
+                        } else if (old != null) {
+                            oldFlow = OldFlowCommand(
+                                speed = old.num()?.text?.toDoubleOrNull() ?: 0.0,
+                                easing = when (old.EASING()?.text) {
+                                    "ease-in" -> Easing.EaseIn
+                                    "linear" -> Easing.Linear
+                                    else -> Easing.Default
+                                }
+                            )
+                            report(old, "You are using the old flow system, please migrate to RR Engine flows before we remove it!", Severity.Warning)
+                        } else {
+                            report(flowCtx, "You should probably specify some flows", Severity.Warning)
+                        }
                     }
                     field.animField() != null -> {
                         val animValue = field.animField()!!.STRING().text.removeSurrounding("\"")
                         anim += AnimCommand(id = animValue)
                     }
                     field.rotateField() != null -> {
-                        val bone = field.rotateField()!!.bone().STRING().text.removeSurrounding("\"")
-                        val vec3i = Coords3.fromAntlr(field.rotateField()?.vec3i()!!)
-                        rotates += RotateCommand(bone = bone, target = vec3i)
+                        val rotate = field.rotateField()!!
+                        val axes = TransformParams("rotate").apply { fill(rotate, rotate.param(), ::fail) }
+                        rotates += RotateCommand(
+                            bone = rotate.bone().STRING().text.removeSurrounding("\""),
+                            target = Coords3(x = axes.x?.value, y = axes.y?.value, z = axes.z?.value)
+                        )
                     }
                     field.moveField() != null -> {
-                        val bone = field.moveField()!!.bone().STRING().text.removeSurrounding("\"")
-                        val vec3i = Coords3.fromAntlr(field.moveField()?.vec3i()!!)
-                        moves += MoveCommand(bone = bone, target = vec3i)
+                        val move = field.moveField()!!
+                        val axes = TransformParams("move").apply { fill(move, move.param(), ::fail) }
+                        moves += MoveCommand(
+                            bone = move.bone().STRING().text.removeSurrounding("\""),
+                            target = Coords3(x = axes.x?.value, y = axes.y?.value, z = axes.z?.value)
+                        )
                     }
                     field.typeField() != null -> {
                         type = MoveType.from(field.typeField()!!.MOVE_TYPE().text)
@@ -125,8 +152,12 @@ class BitsMap {
             // Adding the movements
             for (mappedMovement in ctx.mappedMovement()) {
                 val mapKey = mappedMovement.map().text
+                if (mapKey != "any" && BitUtils.readBitmap(mapKey) == null && BitUtils.readBitmap("${mapKey}_old") == null) {
+                    report(mappedMovement.map(), "Unknown map '$mapKey'.", Severity.Warning)
+                }
                 val mapping = BitMappingData(
                     flow = flow,
+                    oldFlow = oldFlow,
                     rotates = rotates,
                     moves = moves,
                     anim = anim,
@@ -136,33 +167,40 @@ class BitsMap {
                     name = fixtureMap[mapKey]
                 )
 
-                val moveName = mappedMovement.bit().ID()?.text
-                val moveId: UShort? = mappedMovement.bit().INTEGER()?.text?.toUShortOrNull()
-                    ?: mappedMovement.bit().DRAWER_BIT()?.text?.let { bitStr ->
-                        val num = bitStr.filter { it.isDigit() }.toUShortOrNull() ?: ctx.err("Bit ID '${bitStr}' is not a number, nor a name.")
-                        when {
-                            bitStr.endsWith("td") -> num
-                            bitStr.endsWith("bd") -> (BitUtils.NEXT_DRAWER + num).toUShort()
-                            else -> ctx.err("Bit ID '${bitStr}' is not a number, nor a name.")
-                        }
-                    }
+                val bitCtx = mappedMovement.bit()
+                val moveName = bitCtx.ID()?.text
+                val moveId = BitUtils.parseBitId(bitCtx.text)
                 if (moveName == null && moveId == null) {
-                    ctx.err("No movement name/id found for mapping $mapKey (please enter a valid name or the bit ID)")
+                    report(bitCtx, "No movement name/id found for mapping $mapKey (please enter a valid name or the bit ID)")
+                    continue
                 }
+                if (moveId != null && moveId !in 1u.toUShort()..BitUtils.DRAWER_MAX) {
+                    report(bitCtx, "Bit ID '${bitCtx.text}' is out of range (1 to ${BitUtils.DRAWER_MAX}).")
+                    continue
+                }
+                if (moveName != null) report(bitCtx, "Name IDs are no longer supported. Use a bit number", Severity.Warning)
 
                 fun add(mapKey: MappingName, fixtureName: FixtureName? = null) {
-                    val bit = if (moveId != null) moveId else {
+                    val bit = moveId ?: run {
                         // Named bits
-                        val fixtureName = fixtureName ?: fixtureMap[mapKey] ?: ctx.err("No fixture was specified for the map '${mapKey}'. No idea what bit to map '${moveName}' to.")
+                        val fixtureName = fixtureName ?: fixtureMap[mapKey] ?: run {
+                            report(bitCtx, "No fixture was specified for the map '${mapKey}'. No idea what bit to map '${moveName}' to.")
+                            return
+                        }
                         val oldWarn = "A movement from the old bitmap was found being used for '${mapKey}.${fixtureName}'. Please migrate your addon to use numerical bit IDs, or the new names!"
                         val fixtures = bitmaps[mapKey]
-                            ?: oldBitmaps[mapKey]?.also { ctx.warn(oldWarn) }
-                            ?: ctx.err("No bitmap found for '${mapKey}'. Consider using explicit bitmaps and bit IDs instead of bit names")
+                            ?: oldBitmaps[mapKey]?.also { report(bitCtx, oldWarn, Severity.Warning) }
+                            ?: run {
+                                report(bitCtx, "No bitmap found for '${mapKey}'. Consider using explicit bitmaps and bit IDs instead of bit names")
+                                return
+                            }
 
-                        // TODO: This error is thrown, when it should be picking the old bitchart. Wtf?
                         fixtures[fixtureName]?.get(moveName)
-                            ?: oldBitmaps[mapKey]?.get(fixtureName)?.get(moveName)?.also { ctx.warn(oldWarn) }
-                            ?: ctx.err("No move with the name '${moveName}' was found for fixture '${fixtureName}'")
+                            ?: oldBitmaps[mapKey]?.get(fixtureName)?.get(moveName)?.also { report(bitCtx, oldWarn, Severity.Warning) }
+                            ?: run {
+                                report(bitCtx, "No move with the name '${moveName}' was found for fixture '${fixtureName}'")
+                                return
+                            }
                     }
 
                     val movementsTarget = bitMovements.getOrPut(mapKey) { mutableMapOf() }
@@ -185,16 +223,24 @@ class BitsMap {
         }
     }
 
+    /** Parses and checks [text], used by the lsp */
+    fun analyze(text: String): Analysis {
+        val messages = mutableListOf<LogMessage>()
+        val errors = BitsMapErrorListener(messages)
+        val lexer = BitsmapLexer(CharStreams.fromString(text)).apply { removeErrorListeners(); addErrorListener(errors) }
+        val parser = BitsmapParser(CommonTokenStream(lexer)).apply { removeErrorListeners(); addErrorListener(errors) }
+        val tree = parser.file()
+        Visitor(text, messages).visit(tree)
+        return Analysis(tree, messages)
+    }
+
     /** NOTE: Will throw if failed parsing */
     fun load(stream: InputStream): BotBitmapFile {
         val text = stream.bufferedReader().use { it.readText() }
-        val lexer = BitsmapLexer(CharStreams.fromString(text))
-        val tokens = CommonTokenStream(lexer)
-        val parser = BitsmapParser(tokens)
-        val tree = parser.file()
-
-        val visitor = Visitor(text)
-        visitor.visit(tree)
+        val messages = analyze(text).messages
+        messages.forEach { if (it.severity == Severity.Error) errorCallback(it) else warnHandler(it) }
+        val errors = messages.filter { it.severity == Severity.Error }
+        if (errors.isNotEmpty()) error(errors.joinToString("\n"))
         return bitmapFile ?: error("Internal error: ${this::bitmapFile.name} was not filled by the end of the visitor. File may be empty?")
     }
 }

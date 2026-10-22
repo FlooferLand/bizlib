@@ -1,7 +1,7 @@
 package com.flooferland.bizlib.lsp
 
-import BitsmapLexer
-import BitsmapParser
+import com.flooferland.bizlib.bits.generated.BitsmapLexer
+import com.flooferland.bizlib.bits.generated.BitsmapParser
 import org.antlr.v4.runtime.BaseErrorListener
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream

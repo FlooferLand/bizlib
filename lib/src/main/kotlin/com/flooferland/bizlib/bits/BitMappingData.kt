@@ -1,11 +1,8 @@
 package com.flooferland.bizlib.bits
 
-import com.flooferland.bizlib.bits.generated.BitsmapParser
-import kotlinx.serialization.Serializable
-
-@Serializable
 data class BitMappingData(
-    val flow: FlowCommand,
+    val flow: FlowCommand?,
+    val oldFlow: OldFlowCommand?,
     val name: String? = null,
 
     val rotates: List<RotateCommand> = listOf(),
@@ -17,47 +14,45 @@ data class BitMappingData(
     val wiggleMul: Double
 )
 
-@Serializable
 enum class Easing {
     Default,
     Linear,
     EaseIn
 }
 
-@Serializable
 data class FlowCommand(
+    val speedIn: Double?,
+    val speedOut: Double?,
+    val gravityIn: Double?,
+    val gravityOut: Double?,
+    val slamIn: Double?,
+    val slamOut: Double?,
+    val slamInSpeed: Double?,
+    val slamOutSpeed: Double?,
+    val easing: Easing = Easing.Default
+)
+
+data class OldFlowCommand(
     val speed: Double = 1.0,
     val easing: Easing = Easing.Default
 )
 
-@Serializable
 data class AnimCommand(
     val id: String? = null,
     val on: String? = null,
     val off: String? = null
 )
 
-@Serializable
 data class RotateCommand(
     val bone: String,
     val target: Coords3
 )
 
-@Serializable
 data class MoveCommand(
     val bone: String,
     val target: Coords3
 )
 
-@Serializable
-data class Coords3(var x: Float = 0f, var y: Float = 0f, var z: Float = 0f) {
-    companion object {
-        fun fromAntlr(vec: BitsmapParser.Vec3iContext): Coords3 {
-            val angle = Coords3()
-            vec.iaxisX()?.let { angle.x = it.num().text.toFloatOrNull() ?: 0f }
-            vec.iaxisY()?.let { angle.y = it.num().text.toFloatOrNull() ?: 0f }
-            vec.iaxisZ()?.let { angle.z = it.num().text.toFloatOrNull() ?: 0f }
-            return angle
-        }
-    }
+data class Coords3(var x: Double = 0.0, var y: Double = 0.0, var z: Double = 0.0) {
+    constructor(x: Double?, y: Double?, z: Double?) : this(x ?: 0.0, y ?: 0.0, z ?: 0.0)
 }

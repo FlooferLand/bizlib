@@ -4,7 +4,6 @@ import java.io.DataOutputStream
 import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import kotlin.collections.forEachIndexed
 
 class NrbfEncoder(out: OutputStream, val order: ByteOrder = ByteOrder.LITTLE_ENDIAN, block: (NrbfEncoder.() -> Unit)? = null) : AutoCloseable {
     val output: DataOutputStream = DataOutputStream(out)

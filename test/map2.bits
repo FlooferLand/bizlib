@@ -1,6 +1,6 @@
 !version 1
-set rae
-set faz
+set rae beach_bear
+set faz bonnie
 
 rae 166 {
 	flow 1.6
@@ -8,7 +8,7 @@ rae 166 {
 }
 
 any 101 {
-	flow ease-in 0.8
+	flow in:0.3 out:0.3
 	rotate "Head" x:-25
 	move "Head" x:5.3
     type servo

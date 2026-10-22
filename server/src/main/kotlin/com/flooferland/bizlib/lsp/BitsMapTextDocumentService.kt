@@ -1,8 +1,11 @@
 package com.flooferland.bizlib.lsp
 
-import BitsmapLexer
-import BitsmapParser
 import com.flooferland.bizlib.bits.BitUtils
+import com.flooferland.bizlib.bits.BitsMap
+import com.flooferland.bizlib.bits.BitsMapErrorListener
+import com.flooferland.bizlib.bits.ParamSet
+import com.flooferland.bizlib.bits.generated.BitsmapLexer
+import com.flooferland.bizlib.bits.generated.BitsmapParser
 import java.util.concurrent.CompletableFuture
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
@@ -33,27 +36,6 @@ class BitsMapTextDocumentService : TextDocumentService {
             )
         }
     )
-    val diagnosers: Map<Int, DiagnosticProvider> = mapOf(
-        BitsmapParser.RULE_map to { ctx, _ ->
-            val ids = CompiledBitmaps.ids.toList()
-            val isAny = ctx.text == "any" && ctx.parent is BitsmapParser.MappedMovementContext
-            if (ctx.text in ids || isAny) null
-            else unknown("map", ctx.text, ids) to DiagnosticSeverity.Warning
-        },
-        BitsmapParser.RULE_fixture to { ctx, doc ->
-            val valid = doc.findFixtures(ctx, includeOld = false)
-            if (valid.isEmpty() || ctx.text in valid) null
-            else unknown("fixture", ctx.text, valid) to DiagnosticSeverity.Error
-        },
-        BitsmapParser.RULE_bit to { ctx, doc ->
-            when (doc.bitId(ctx.text)) {
-                null -> "Name IDs are no longer supported. Use a bit number" to DiagnosticSeverity.Error
-                !in 1u.toUShort()..BitUtils.DRAWER_MAX -> "Bit ID '${ctx.text}' is out of range (1 to ${BitUtils.DRAWER_MAX})." to DiagnosticSeverity.Error
-                else -> null
-            }
-        },
-    )
-
 
     override fun didOpen(params: DidOpenTextDocumentParams) {
         setDocument(params.textDocument.uri, params.textDocument.text)
@@ -74,28 +56,18 @@ class BitsMapTextDocumentService : TextDocumentService {
     private fun setDocument(uri: String, content: String?) {
         if (content == null) return
 
-        val errors = BitsMapErrorListener()
-        val lexer = BitsmapLexer(CharStreams.fromString(content)).apply { removeErrorListeners(); addErrorListener(errors) }
-        val parser = BitsmapParser(CommonTokenStream(lexer)).apply { removeErrorListeners(); addErrorListener(errors) }
-
-        val document = Document(parser.file(), content)
-        documents[uri] = document
-        errors.diagnostics += validate(document)
-        client?.publishDiagnostics(PublishDiagnosticsParams(uri, errors.diagnostics))
-    }
-
-    private fun validate(document: Document): List<Diagnostic> {
-        return diagnosers.flatMap { (ruleIndex, validator) ->
-            Trees.findAllRuleNodes(document.tree, ruleIndex)
-                .filterIsInstance<ParserRuleContext>()
-                .filter { it.start != null && it.stop != null && it.exception == null }
-                .mapNotNull { ctx ->
-                    val receiver = DiagnosticReceiver()
-                    validator(receiver, ctx, document)?.let { (message, severity) ->
-                        Diagnostic(ctx.range(), message, severity, "bitsmap")
-                    }
-                }
+        val analysis = BitsMap().analyze(content)
+        documents[uri] = Document(analysis.tree, content)
+        val diagnostics = analysis.messages.map { message ->
+            val pos = message.position
+            Diagnostic(
+                pos?.let { Range(Position(it.start.line - 1, it.start.column), Position(it.end.line - 1, it.end.column)) } ?: Range(Position(0, 0), Position(0, 0)),
+                message.text,
+                if (message.severity == BitsMap.Severity.Error) DiagnosticSeverity.Error else DiagnosticSeverity.Warning,
+                "bitsmap"
+            )
         }
+        client?.publishDiagnostics(PublishDiagnosticsParams(uri, diagnostics))
     }
 
     override fun completion(params: CompletionParams): CompletableFuture<Either<List<CompletionItem?>?, CompletionList?>?>? {
@@ -140,8 +112,14 @@ class BitsMapTextDocumentService : TextDocumentService {
                 }
             }
 
+        val params = run {
+            val label = probe.tree.getFieldName()?.let { ParamSet.fieldParamList[it] } ?: return@run listOf()
+            items(label.toList(), CompletionItemKind.Keyword, label.toList().associateWith { "$it:" })
+        }
+
         return items(probe.allowedKeywords, CompletionItemKind.Keyword) +
-                probe.values(Document(probe.tree, before)).flatMap { items(it.entries, CompletionItemKind.EnumMember, it.inserts) }
+                probe.values(Document(probe.tree, before)).flatMap { items(it.entries, CompletionItemKind.EnumMember, it.inserts) } +
+                params
     }
 
     override fun semanticTokensFull(params: SemanticTokensParams?): CompletableFuture<SemanticTokens?>? {
@@ -172,12 +150,12 @@ class BitsMapTextDocumentService : TextDocumentService {
 
         val (movement, bit) = Trees.findAllRuleNodes(document.tree, BitsmapParser.RULE_mappedMovement)
             .filterIsInstance<BitsmapParser.MappedMovementContext>()
-            .firstNotNullOfOrNull { ctx -> ctx.bit()?.takeIf { params.position in it.range() }?.let { ctx to it } }
+            .firstNotNullOfOrNull { ctx -> ctx.bit().takeIf { params.position in it.range() }?.let { ctx to it } }
             ?: return CompletableFuture.completedFuture(null)
 
         val map = movement.map().text
         val movements = document.movements(map, includeOld = true)
-        val id = document.bitId(bit.text) ?: movements[bit.text]
+        val id = BitUtils.parseBitId(bit.text) ?: movements[bit.text]
         val names = movements.filterValues { it.toInt() == id?.toInt() }.keys
 
         val markdown = if (names.isEmpty()) "Bit $id" else "`${names.joinToString(" / ")}` - bit $id\n\n`$map.${document.fixtures[map]}`"

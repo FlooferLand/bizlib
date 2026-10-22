@@ -1,5 +1,3 @@
-import com.strumenta.antlrkotlin.gradle.AntlrKotlinTask
-import org.gradle.declarative.dsl.schema.FqName.Empty.packageName
 import org.gradle.kotlin.dsl.sourceSets
 
 group = "com.flooferland"
@@ -8,7 +6,6 @@ version = "1.0.3"
 plugins {
     kotlin("jvm")
     id("io.kotest")
-    id("com.strumenta.antlr-kotlin")
     antlr
     `maven-publish`
 }
@@ -21,7 +18,6 @@ fun dep(name: String) = (project.property(name) as? String)!!
 dependencies {
     // https://mvnrepository.com/artifact/org.antlr/antlr4
     antlr("org.antlr:antlr4:${dep("antlr")}")
-    implementation("com.strumenta:antlr-kotlin-runtime:${dep("antlr_kotlin")}")
 
     // JNA
     implementation("net.java.dev.jna:jna:${dep("jna")}")
@@ -33,22 +29,9 @@ dependencies {
     testImplementation("io.kotest:kotest-framework-engine:$kotest")
     testImplementation("io.kotest:kotest-assertions-core:$kotest")
 }
-
-val generateKotlinGrammarSource = tasks.register<AntlrKotlinTask>("generateKotlinGrammarSource") {
-    dependsOn("cleanGenerateKotlinGrammarSource")
-    description = "Compiles ANTLR grammar files"
-
-    source = fileTree(layout.projectDirectory.dir("src/main/antlr")) {
-        include("**/*.g4")
-    }
-
-    val pkgName = "com.flooferland.bizlib.bits.generated"
-    packageName = pkgName
-
+tasks.generateGrammarSource {
     arguments = listOf("-visitor")
-
-    val outDir = "generatedAntlr/${pkgName.replace(".", "/")}"
-    outputDirectory = layout.buildDirectory.dir(outDir).get().asFile
+    packageName = "com.flooferland.bizlib.bits.generated"
 }
 
 tasks.compileKotlin {
@@ -69,13 +52,6 @@ sourceSets {
 
 kotlin {
     jvmToolchain(21)
-    sourceSets {
-        main {
-            kotlin {
-                srcDir(generateKotlinGrammarSource)
-            }
-        }
-    }
 }
 
 tasks.withType<Test>().configureEach {

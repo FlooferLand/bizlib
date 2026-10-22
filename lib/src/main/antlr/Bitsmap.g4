@@ -11,13 +11,18 @@ bitFields:
 ;
 
 // Bit fields
-flowField: 'flow' EASING? num;
+flowField: 'flow' (oldFlowFieldParams | param+);
 animField: 'anim' STRING;
-rotateField: 'rotate' bone vec3i;
-moveField: 'move' bone vec3i;
+rotateField: 'rotate' bone param+;
+moveField: 'move' bone param+;
 typeField: 'type' MOVE_TYPE;
 holdField: 'hold' BOOLEAN;
 wiggleMulField: 'wigglemul' num;
+
+oldFlowFieldParams: EASING? num;
+
+param: ID ':' paramValue;
+paramValue: num | BOOLEAN | MOVE_TYPE | EASING | STRING;
 
 // Prep statement
 prepStmt: '!' prepFields;
@@ -30,10 +35,6 @@ versionPrep: 'version' INTEGER;
 
 // Thingies
 mappedMovement: map bit;
-vec3i: iaxisX? iaxisY? iaxisZ?;
-iaxisX: 'x' ':' num;
-iaxisY: 'y' ':' num;
-iaxisZ: 'z' ':' num;
 bone: STRING;
 bit: ID | INTEGER | DRAWER_BIT;
 fixture: ID;  // for setStmt

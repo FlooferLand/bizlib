@@ -13,6 +13,7 @@ object BitUtils {
     const val DRAWER_MAX: UShort = 300u
 
     private val bitmapCache = mutableMapOf<String, FixtureMap>()
+    private val drawerBit = Regex("""(\d+)(td|bd)""")
 
     /** Returns null if the bitmap does not exist, or if it could not be parsed */
     fun readBitmap(name: String): FixtureMap? {
@@ -30,5 +31,11 @@ object BitUtils {
         }
         bitmapCache[name] = map
         return map
+    }
+
+    fun parseBitId(text: String): UShort? {
+        val match = drawerBit.matchEntire(text) ?: return text.toUShortOrNull()
+        val num = match.groupValues[1].toUShortOrNull() ?: return null
+        return if (match.groupValues[2] == "bd") (num + NEXT_DRAWER).toUShort() else num
     }
 }

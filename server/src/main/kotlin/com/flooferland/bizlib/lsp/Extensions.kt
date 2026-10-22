@@ -1,5 +1,6 @@
 package com.flooferland.bizlib.lsp
 
+import com.flooferland.bizlib.bits.BitsMap.LogMessage
 import com.flooferland.bizlib.bits.generated.BitsmapParser
 import org.antlr.v4.runtime.atn.ATNState
 import org.antlr.v4.runtime.ParserRuleContext

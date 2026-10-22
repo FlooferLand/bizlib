@@ -17,6 +17,6 @@ class BitsMapErrorListener(private val raw: String, private val messages: Mutabl
             BitsMap.LogMessage.Point(line, charPositionInLine),
             BitsMap.LogMessage.Point(line, charPositionInLine + (token?.text?.length ?: 1))
         )
-        messages += BitsMap.LogMessage(message, position = pos, context = contextAround(raw, pos))
+        messages += BitsMap.LogMessage(message, position = pos, context = pos.contextAround(raw), severity = BitsMap.Severity.Warning)
     }
 }

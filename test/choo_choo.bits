@@ -1,0 +1,6 @@
+set rae choo_choo
+
+rae 50td {
+    flow 1
+    move "choo choo" y:10.8
+}

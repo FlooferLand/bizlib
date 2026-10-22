@@ -104,24 +104,26 @@ abstract class ParamSet(val field: String) {
 }
 
 class FlowParams : ParamSet("flow") {
-    val speedIn by num("in", 1.0)
-    val speedOut by num("out", 1.0)
-    val accelIn by num("g_in", 1.0).optional()
-    val accelOut by num("g_out", 1.0).optional()
-    val slamIn by num("s_in", 0.0).optional()
-    val slamOut by num("s_out", 0.0).optional()
-    val slamInSpeed by num("slam_in_speed", 0.0).optional()
-    val slamOutSpeed by num("slam_out_speed", 0.0).optional()
+    val flowIn by num("in", 1.0)
+    val flowOut by num("out", 1.0)
+
+    val gravIn by num("grav_in", 1.0).optional()
+    val gravOut by num("grav_out", 1.0).optional()
+
+    val smashIn by num("smash_in", 0.0).optional()
+    val smashout by num("smash_out", 0.0).optional()
+    val smashInSpeed by num("smash_in_speed", 0.0).optional()
+    val smashOutSpeed by num("smash_out_speed", 0.0).optional()
 
     fun toCommand(): FlowCommand? = FlowCommand(
-        speedIn = speedIn?.value ?: return null,
-        speedOut = speedOut?.value ?: return null,
-        gravityIn = accelIn?.value,
-        gravityOut = accelOut?.value,
-        slamIn = slamIn?.value,
-        slamOut = slamOut?.value,
-        slamInSpeed = slamInSpeed?.value,
-        slamOutSpeed = slamOutSpeed?.value,
+        speedIn = flowIn?.value ?: return null,
+        speedOut = flowOut?.value ?: return null,
+        gravityIn = gravIn?.value,
+        gravityOut = gravOut?.value,
+        slamIn = smashIn?.value,
+        slamOut = smashout?.value,
+        slamInSpeed = smashInSpeed?.value,
+        slamOutSpeed = smashOutSpeed?.value,
         easing = Easing.Default,  // TODO: Add easing
     )
 }

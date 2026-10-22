@@ -108,11 +108,14 @@ class BitsMap {
             val rotates = mutableListOf<RotateCommand>()
             val moves = mutableListOf<MoveCommand>()
             val anim = mutableListOf<AnimCommand>()
+
             var flow: FlowCommand? = null
             var oldFlow: OldFlowCommand? = null
+
             var type: MoveType = MoveType.Default
             var hold: BooleanType = BooleanType.defaultNo()
             var wiggleMul = 1.0
+
             for (field in ctx.bitFields()) {
                 when {
                     field.flowField() != null -> {
@@ -125,11 +128,7 @@ class BitsMap {
                         } else if (old != null) {
                             oldFlow = OldFlowCommand(
                                 speed = old.num()?.text?.toDoubleOrNull() ?: 0.0,
-                                easing = when (old.EASING()?.text) {
-                                    "ease-in" -> Easing.EaseIn
-                                    "linear" -> Easing.Linear
-                                    else -> Easing.Default
-                                }
+                                easing = Easing.from(old.EASING()?.text ?: "")
                             )
                             addWarn(old, "You are using the old flow system, please migrate to RR Engine flows!")
                         } else {

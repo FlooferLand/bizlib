@@ -16,8 +16,18 @@ data class BitMappingData(
 
 enum class Easing {
     Default,
+    Smooth,
     Linear,
-    EaseIn
+    EaseIn;
+
+    companion object {
+        fun from(text: String) = when (text) {
+            "smooth" -> Smooth
+            "linear" -> Linear
+            "ease-in" -> EaseIn
+            else -> Default
+        }
+    }
 }
 
 data class FlowCommand(

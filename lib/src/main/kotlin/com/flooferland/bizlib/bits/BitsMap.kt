@@ -10,6 +10,8 @@ import java.io.InputStream
 
 // TODO: Add thorough error throwing to tell the user why something doesn't work
 
+// TODO: Burn this class in the darkest pits
+
 /** NOTE: Constructor will throw an exception if failed parsing */
 class BitsMap {
     var bitmapFile: BotBitmapFile? = null
@@ -27,11 +29,8 @@ class BitsMap {
         }
         override fun toString(): String {
             var message = text
-            if (position != null && context != null) {
-                message += " ($position)"
-                message += "\n"
-                message += context
-            }
+            if (position != null) message += " ($position)"
+            if (context != null) message += "\n$context"
             return message
         }
     }
@@ -49,8 +48,9 @@ class BitsMap {
         private fun report(ctx: ParserRuleContext, text: String, severity: Severity = Severity.Error) {
             val message = LogMessage(text, severity = severity)
             ctx.position?.let { pos ->
-                message.position = LogMessage.Pos(LogMessage.Point(pos.start.line, pos.start.column), LogMessage.Point(pos.end.line, pos.end.column))
-                message.context = pos.text(raw).prependIndent(">    ")
+                val at = LogMessage.Pos(LogMessage.Point(pos.start.line, pos.start.column), LogMessage.Point(pos.end.line, pos.end.column))
+                message.position = at
+                message.context = contextAround(raw, at)
             }
             messages += message
         }
@@ -226,7 +226,7 @@ class BitsMap {
     /** Parses and checks [text], used by the lsp */
     fun analyze(text: String): Analysis {
         val messages = mutableListOf<LogMessage>()
-        val errors = BitsMapErrorListener(messages)
+        val errors = BitsMapErrorListener(text, messages)
         val lexer = BitsmapLexer(CharStreams.fromString(text)).apply { removeErrorListeners(); addErrorListener(errors) }
         val parser = BitsmapParser(CommonTokenStream(lexer)).apply { removeErrorListeners(); addErrorListener(errors) }
         val tree = parser.file()
@@ -243,4 +243,21 @@ class BitsMap {
         if (errors.isNotEmpty()) error(errors.joinToString("\n"))
         return bitmapFile ?: error("Internal error: ${this::bitmapFile.name} was not filled by the end of the visitor. File may be empty?")
     }
+}
+
+fun contextAround(raw: String, pos: BitsMap.LogMessage.Pos): String {
+    val lines = raw.lines()
+    val first = (pos.start.line - 2).coerceAtLeast(1)
+    val last = (pos.end.line + 1).coerceAtMost(lines.size)
+    val width = last.toString().length
+    return buildString {
+        for (i in first..last) {
+            appendLine("${i.toString().padStart(width)} | ${lines[i - 1]}")
+            if (i in pos.start.line..pos.end.line) {
+                val from = if (i == pos.start.line) pos.start.column else 0
+                val to = if (i == pos.end.line) pos.end.column else lines[i - 1].length
+                appendLine(" ".repeat(width) + " | " + " ".repeat(from) + "^".repeat((to - from).coerceAtLeast(1)))
+            }
+        }
+    }.trimEnd()
 }

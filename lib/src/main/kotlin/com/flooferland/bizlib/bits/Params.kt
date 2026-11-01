@@ -62,11 +62,13 @@ abstract class ParamSet(val field: String) {
         /** Should be replaced with something less sketchy.. */
         const val TARGET = "target"
 
-        val registry = listOf(
-            FlowParams(),
-            TransformParams("rotate"),
-            TransformParams("move")
-        ).associateBy { it.field }
+        val registry by lazy {
+            listOf(
+                FlowParams(),
+                TransformParams("rotate"),
+                TransformParams("move")
+            ).associateBy { it.field }
+        }
         fun init() { registry }
     }
 }

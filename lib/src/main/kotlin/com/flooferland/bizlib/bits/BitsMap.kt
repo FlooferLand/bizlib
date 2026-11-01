@@ -17,8 +17,12 @@ class BitsMap {
     var bitmapFile: BotBitmapFile? = null
     var fixtureMap = mutableMapOf<MappingName, FixtureName>()
 
-    var errorCallback: (message: LogMessage) -> Unit = { message -> }
-    var warnHandler: (message: LogMessage) -> Unit = { message -> System.err.println("[Bizlib] WARN: $message") }
+    var errorCallback: (message: LogMessage) -> Unit = { message ->
+        System.err.println("[Bizlib] ERR: $message")
+    }
+    var warnHandler: (message: LogMessage) -> Unit = { message ->
+        System.err.println("[Bizlib] WARN: $message")
+    }
 
     enum class Severity { Error, Warning }
 
@@ -116,15 +120,34 @@ class BitsMap {
             var hold: BooleanType = BooleanType.defaultNo()
             var wiggleMul = 1.0
 
-            for (field in ctx.bitFields()) {
+            for (field in ctx.bitField()) {
                 when {
                     field.flowField() != null -> {
                         val flowCtx = field.flowField()!!
-                        val new = flowCtx.param()
+                        val new = flowCtx.params()
                         val old = flowCtx.oldFlowFieldParams()
-                        if (new.isNotEmpty()) {
+                        if (new != null) {
+                            if (flow == null) flow = FlowCommand()
                             val params = FlowParams().apply { fill(flowCtx, new, ::fail) }
-                            flow = params.toCommand()
+                            when (params.target.value) {
+                                "speed" -> {
+                                    flow.flowIn = params.valueIn.value
+                                    flow.flowOut = params.valueOut.value
+                                }
+                                "accel" -> {
+                                    flow.gravityIn = params.valueIn.value
+                                    flow.gravityOut = params.valueOut.value
+                                }
+                                "smash" -> {
+                                    flow.smashIn = params.valueIn.value
+                                    flow.smashOut = params.valueOut.value
+                                }
+                                "smash_speed" -> {
+                                    flow.smashInSpeed = params.valueIn.value
+                                    flow.smashOutSpeed = params.valueOut.value
+                                }
+                                else -> "Unknown target '${params.target.value}'"
+                            }
                         } else if (old != null) {
                             oldFlow = OldFlowCommand(
                                 speed = old.num()?.text?.toDoubleOrNull() ?: 0.0,
@@ -141,18 +164,18 @@ class BitsMap {
                     }
                     field.rotateField() != null -> {
                         val rotate = field.rotateField()!!
-                        val axes = TransformParams("rotate").apply { fill(rotate, rotate.param(), ::fail) }
+                        val axes = TransformParams("rotate").apply { fill(rotate, rotate.params(), ::fail) }
                         rotates += RotateCommand(
                             bone = rotate.bone().STRING().text.removeSurrounding("\""),
-                            target = Coords3(x = axes.x?.value, y = axes.y?.value, z = axes.z?.value)
+                            target = Coords3(x = axes.x.value, y = axes.y.value, z = axes.z.value)
                         )
                     }
                     field.moveField() != null -> {
                         val move = field.moveField()!!
-                        val axes = TransformParams("move").apply { fill(move, move.param(), ::fail) }
+                        val axes = TransformParams("move").apply { fill(move, move.params(), ::fail) }
                         moves += MoveCommand(
                             bone = move.bone().STRING().text.removeSurrounding("\""),
-                            target = Coords3(x = axes.x?.value, y = axes.y?.value, z = axes.z?.value)
+                            target = Coords3(x = axes.x.value, y = axes.y.value, z = axes.z.value)
                         )
                     }
                     field.typeField() != null -> {

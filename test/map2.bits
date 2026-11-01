@@ -8,10 +8,12 @@ rae 166 {
 }
 
 any 101 {
-	flow in:0.3 out:0.3 grav_in:1.0 grav_out:1.0 smash_in:0.3 smash_out:0.3 smash_in_speed:0.5 smash_out_speed:0.5
+	flow speed in:0.3 out:0.3
+	flow accel in:1.0 out:1.0
+	flow smash in:0.3 out:0.3
+	flow smash_speed in:0.5 out:0.5
 	rotate "Head" x:-25
 	move "Head" x:5.3
-    type servo
 }
 
 rae 16bd {

@@ -5,24 +5,27 @@ file: prepStmt* setStmt+ bitStmt* EOF;
 setStmt: 'set' map fixture?;
 
 // Bit statement
-bitStmt: mappedMovement (',' mappedMovement)* '{' bitFields+ '}';
-bitFields:
+bitStmt: mappedMovement (',' mappedMovement)* '{' bitField+ '}';
+bitField:
 	flowField | animField | rotateField | moveField | typeField | holdField | wiggleMulField
 ;
 
 // Bit fields
-flowField: 'flow' (oldFlowFieldParams | param+);
+flowField: 'flow' (oldFlowFieldParams | params);
 animField: 'anim' STRING;
-rotateField: 'rotate' bone param+;
-moveField: 'move' bone param+;
+rotateField: 'rotate' bone params;
+moveField: 'move' bone params;
 typeField: 'type' MOVE_TYPE;
 holdField: 'hold' BOOLEAN;
 wiggleMulField: 'wigglemul' num;
 
 oldFlowFieldParams: EASING? num;
 
-param: ID ':' paramValue;
-paramValue: num | BOOLEAN | MOVE_TYPE | EASING | STRING;
+params: unnamedParam* namedParam*;
+unnamedParam: paramValue;
+namedParam: paramName ':' paramValue;
+paramName: ID;
+paramValue: num | BOOLEAN | MOVE_TYPE | FLOW_TYPE | EASING | STRING;
 
 // Prep statement
 prepStmt: '!' prepFields;
@@ -47,6 +50,7 @@ fragment UINT  : DIGIT+ ;
 DRAWER_BIT     : UINT('td'|'bd')          ;
 EASING         : 'linear' | 'ease-in'     ;
 MOVE_TYPE      : 'servo' | 'pneumatic' | 'effect' ;
+FLOW_TYPE      : 'speed' | 'accel' | 'smash' | 'smash_speed' ;
 BOOLEAN        : 'yes' | 'no'             ;
 
 DECIMAL        : '-'? [0-9]+ ('.'[0-9]+)  ;

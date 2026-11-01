@@ -7,130 +7,131 @@ import kotlin.reflect.KProperty
 
 typealias ParamFail = (ParserRuleContext, String) -> Unit
 
+data class ParamId(val target: Boolean = false, val name: String? = null) {
+    companion object {
+        fun <T> from(param: Param<T>): ParamId {
+            return if (param.name == ParamSet.TARGET) { ParamId(target = true) } else { ParamId(name = param.name) }
+        }
+        fun from(ctx: BitsmapParser.ParamNameContext?): ParamId {
+            val name = ctx?.text
+            return if (name == null) { ParamId(target = true) } else { ParamId(name = name) }
+        }
+    }
+}
+
 abstract class ParamSet(val field: String) {
-    private val validators = mutableMapOf<String, (BitsmapParser.ParamValueContext) -> Boolean>()
-    private val requiredKeys = mutableSetOf<String>()
-    private val atLeastOne = mutableListOf<List<String>>()
-    private val given = mutableMapOf<String, BitsmapParser.ParamContext>()
+    val params = mutableMapOf<ParamId, Param<*>>()
 
-    data class Param<T>(val field: String, val name: String, val value: T)
+    fun fill(ctx: ParserRuleContext, paramsCtx: BitsmapParser.ParamsContext, fail: ParamFail) {
+        for (paramCtx in paramsCtx.unnamedParam()) {
+            val valueCtx = paramCtx.paramValue()
 
-    abstract class ParamType<T> {
-        abstract fun parse(ctx: BitsmapParser.ParamValueContext): T?
-
-        object Num : ParamType<Double>() {
-            override fun parse(ctx: BitsmapParser.ParamValueContext) = ctx.num()?.text?.toDoubleOrNull()
-        }
-        object Bool : ParamType<BooleanType>() {
-            override fun parse(ctx: BitsmapParser.ParamValueContext) = ctx.BOOLEAN()?.text?.let { BooleanType.from(it) }
-        }
-        object Str : ParamType<String>() {
-            override fun parse(ctx: BitsmapParser.ParamValueContext) = ctx.STRING()?.text?.removeSurrounding("\"")
-        }
-    }
-
-    inner class ParamDelegate<T>(val key: String, val type: ParamType<T>, val default: T? = null) : ReadOnlyProperty<ParamSet, Param<T>?> {
-        fun optional(): ParamDelegate<T> {
-            requiredKeys -= key
-            return ParamDelegate(key, type, default)
-        }
-        override fun getValue(thisRef: ParamSet, property: KProperty<*>): Param<T>? {
-            return given[key]?.paramValue()?.let { type.parse(it) }?.let { Param(field, key, it) }
-        }
-    }
-
-    protected fun <T> param(key: String, type: ParamType<T>, d: T?): ParamDelegate<T> {
-        validators[key] = { type.parse(it) != null }
-        requiredKeys += key
-        fieldParamList.getOrPut(field) { mutableSetOf() }.add(key)
-        return ParamDelegate(key, type, d)
-    }
-
-    // IDE inlays take up half my screen so D it is
-    protected fun num(key: String, d: Double? = null) =
-        param(key, ParamType.Num, d)
-    protected fun bool(key: String, d: Boolean? = null) =
-        param(key, ParamType.Bool, d?.let { if (it) BooleanType.Yes else BooleanType.No })
-    protected fun str(key: String, d: String? = null) =
-        param(key, ParamType.Str, d)
-
-    protected fun atLeastOneOf(vararg keys: String) {
-        atLeastOne += keys.toList()
-    }
-
-    fun fill(ctx: ParserRuleContext, params: List<BitsmapParser.ParamContext>, fail: ParamFail) {
-        given.clear()
-        val givenKeys = mutableSetOf<String>()
-        for (param in params) {
-            val key = param.ID().text
-            val check = validators[key]
-            if (check == null) {
-                fail(param, "Parameter '$key' doesn't exist on '$field'")
-                continue
-            }
-            if (!givenKeys.add(key)) {
-                fail(param, "Parameter '$key' can't be defined twice on '$field'")
+            val id = ParamId(target = true)
+            val param = params[id] ?: run {
+                fail(valueCtx, "Expected a parameter")
                 continue
             }
 
-            val value = param.paramValue()
-            if (value == null) {
-                fail(param, "Parameter '$key' needs a value")
+            if (!param.parseSetValue(valueCtx)) {
+                fail(valueCtx, "Failed to parse unnamed parameter. Expected type '${param.typeName}'")
                 continue
             }
-            if (!check(value)) {
-                fail(param, "Parameter '$key' has the wrong value type")
-            }
-            given[key] = param
         }
 
-        for (param in requiredKeys) {
-            if (param !in givenKeys) {
-                fail(ctx, "Missing required parameter '$param' on '$field'")
+        for (paramCtx in paramsCtx.namedParam()) {
+            val nameCtx = paramCtx.paramName()
+            val valueCtx = paramCtx.paramValue()
+
+            val id = ParamId.from(nameCtx)
+            if (id.name == TARGET) continue
+
+            val param = params[id]
+            if (param == null) {
+                fail(nameCtx ?: ctx, "Failed to find parameter for name '${nameCtx?.text}' (params.size = ${params.size})")
+                continue
             }
-        }
-        for (group in atLeastOne) {
-            if (group.none { it in givenKeys }) {
-                fail(ctx, "At least one of ${group.joinToString { "'$it'" }} must be given on '$field'")
+
+            if (!param.parseSetValue(valueCtx)) {
+                fail(valueCtx, "Failed to parse parameter '${nameCtx?.text}'. Expected type '${param.typeName}'")
+                continue
             }
         }
     }
 
     companion object {
-        val fieldParamList = mutableMapOf<String, MutableSet<String>>()
-        val registry = listOf(FlowParams(), TransformParams("rotate"), TransformParams("move")).associateBy { it.field }
+        /** Should be replaced with something less sketchy.. */
+        const val TARGET = "target"
+
+        val registry = listOf(
+            FlowParams(),
+            TransformParams("rotate"),
+            TransformParams("move")
+        ).associateBy { it.field }
         fun init() { registry }
     }
 }
 
+@Suppress("unused")
+abstract class Param<T>(val name: String) : ReadOnlyProperty<ParamSet, Param<T>> {
+    private var nameless = false
+    private var optional = false
+    private var default: T? = null
+    var completionResults = listOf<String>()
+    var value: T? = null
+
+    fun nameless() = also { nameless = true }
+    fun optional() = also { optional = true }
+    fun default(value: T) = also { default = value }
+
+    operator fun provideDelegate(thisRef: ParamSet, property: KProperty<*>): Param<T> {
+        val id = ParamId.from(this)
+        thisRef.params[id] = this
+        return this
+    }
+
+    override fun getValue(thisRef: ParamSet, property: KProperty<*>): Param<T> {
+        return this
+    }
+
+    fun parseSetValue(ctx: BitsmapParser.ParamValueContext): Boolean {
+        value = parse(ctx)
+        return value != null
+    }
+
+    abstract val typeName: String
+    abstract fun parse(ctx: BitsmapParser.ParamValueContext): T?
+
+    class Num(name: String) : Param<Double>(name) {
+        override val typeName = "num"
+        override fun parse(ctx: BitsmapParser.ParamValueContext) = ctx.num()?.text?.toDoubleOrNull()
+    }
+    class Bool(name: String) : Param<BooleanType>(name) {
+        override val typeName = "bool"
+        override fun parse(ctx: BitsmapParser.ParamValueContext) = ctx.BOOLEAN()?.text?.let { BooleanType.from(it) }
+    }
+    class Str(name: String) : Param<String>(name) {
+        override val typeName = "str"
+        override fun parse(ctx: BitsmapParser.ParamValueContext) = ctx.STRING()?.text?.removeSurrounding("\"")
+    }
+    class FlowType : Param<String>(ParamSet.TARGET) {
+        override val typeName = "flow_type"
+        init {
+            nameless()
+            completionResults = listOf("speed", "accel", "smash", "smash_speed")
+        }
+        override fun parse(ctx: BitsmapParser.ParamValueContext) = ctx.FLOW_TYPE()?.text
+    }
+}
+
 class FlowParams : ParamSet("flow") {
-    val flowIn by num("in", 1.0)
-    val flowOut by num("out", 1.0)
-
-    val gravIn by num("grav_in", 1.0).optional()
-    val gravOut by num("grav_out", 1.0).optional()
-
-    val smashIn by num("smash_in", 0.0).optional()
-    val smashOut by num("smash_out", 0.0).optional()
-    val smashInSpeed by num("smash_in_speed", 0.0).optional()
-    val smashOutSpeed by num("smash_out_speed", 0.0).optional()
-
-    fun toCommand(): FlowCommand? = FlowCommand(
-        flowIn = flowIn?.value ?: return null,
-        flowOut = flowOut?.value ?: return null,
-        gravityIn = gravIn?.value,
-        gravityOut = gravOut?.value,
-        smashIn = smashIn?.value,
-        smashOut = smashOut?.value,
-        smashInSpeed = smashInSpeed?.value,
-        smashOutSpeed = smashOutSpeed?.value,
-        easing = Easing.Default,  // TODO: Add easing
-    )
+    val target by Param.FlowType()
+    val valueIn by Param.Num("in").default(1.0)
+    val valueOut by Param.Num("out").default(1.0)
 }
 
 class TransformParams(field: String) : ParamSet(field) {
-    val x by num("x", 0.0).optional()
-    val y by num("y", 0.0).optional()
-    val z by num("z", 0.0).optional()
-    init { atLeastOneOf("x", "y", "z") }
+    val x by Param.Num("x").default(0.0).optional()
+    val y by Param.Num("y").default(0.0).optional()
+    val z by Param.Num("z").default(0.0).optional()
+    // init { forceOneOf("x", "y", "z") }
 }

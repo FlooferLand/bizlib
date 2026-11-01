@@ -2,14 +2,12 @@ package com.flooferland.bizlib.lsp
 
 import com.flooferland.bizlib.bits.BitUtils
 import com.flooferland.bizlib.bits.BitsMap
-import com.flooferland.bizlib.bits.BitsMapErrorListener
 import com.flooferland.bizlib.bits.ParamSet
 import com.flooferland.bizlib.bits.generated.BitsmapLexer
 import com.flooferland.bizlib.bits.generated.BitsmapParser
 import java.util.concurrent.CompletableFuture
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
-import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.Trees
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
@@ -17,7 +15,7 @@ import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.TextDocumentService
 import kotlin.collections.filter
 import kotlin.collections.flatMap
-import kotlin.collections.mapNotNull
+import kotlin.collections.mapValues
 
 class BitsMapTextDocumentService : TextDocumentService {
     var client: LanguageClient? = null
@@ -112,14 +110,22 @@ class BitsMapTextDocumentService : TextDocumentService {
                 }
             }
 
-        val params = run {
-            val label = probe.tree.getFieldName()?.let { ParamSet.fieldParamList[it] } ?: return@run listOf()
-            items(label.toList(), CompletionItemKind.Keyword, label.toList().associateWith { "$it:" })
+        val fieldName = probe.tree.getFieldName()
+        if (fieldName != null) run {
+            val map = mutableMapOf<String, Boolean>()
+            val params = ParamSet.registry[fieldName]?.params ?: return@run
+            for ((id, param) in params) {
+                if (id.target) {
+                    map += param.completionResults.map { Pair(it, false) }
+                } else {
+                    id.name?.let { map[it] = true }
+                }
+            }
+            return items(map.keys.toList(), CompletionItemKind.Keyword, map.mapValues { if (it.value) "${it.key}:" else it.key })
         }
 
         return items(probe.allowedKeywords, CompletionItemKind.Keyword) +
-                probe.values(Document(probe.tree, before)).flatMap { items(it.entries, CompletionItemKind.EnumMember, it.inserts) } +
-                params
+                probe.values(Document(probe.tree, before)).flatMap { items(it.entries, CompletionItemKind.EnumMember, it.inserts) }
     }
 
     override fun semanticTokensFull(params: SemanticTokensParams?): CompletableFuture<SemanticTokens?>? {
@@ -148,17 +154,31 @@ class BitsMapTextDocumentService : TextDocumentService {
     override fun hover(params: HoverParams): CompletableFuture<Hover?>? {
         val document = documents[params.textDocument.uri] ?: return CompletableFuture.completedFuture(null)
 
-        val (movement, bit) = Trees.findAllRuleNodes(document.tree, BitsmapParser.RULE_mappedMovement)
+        val mappedMovement = Trees.findAllRuleNodes(document.tree, BitsmapParser.RULE_mappedMovement)
             .filterIsInstance<BitsmapParser.MappedMovementContext>()
             .firstNotNullOfOrNull { ctx -> ctx.bit().takeIf { params.position in it.range() }?.let { ctx to it } }
-            ?: return CompletableFuture.completedFuture(null)
+        if (mappedMovement != null) {
+            val (movement, bit) = mappedMovement
+            val map = movement.map().text
+            val movements = document.movements(map, includeOld = true)
+            val id = BitUtils.parseBitId(bit.text) ?: movements[bit.text]
+            val names = movements.filterValues { it.toInt() == id?.toInt() }.keys
 
-        val map = movement.map().text
-        val movements = document.movements(map, includeOld = true)
-        val id = BitUtils.parseBitId(bit.text) ?: movements[bit.text]
-        val names = movements.filterValues { it.toInt() == id?.toInt() }.keys
+            val value = if (names.isEmpty()) "Bit $id" else "`${names.joinToString(" / ")}` - bit $id\n\n`$map.${document.fixtures[map]}`"
+            return CompletableFuture.completedFuture(Hover(MarkupContent(MarkupKind.MARKDOWN, value), bit.range()))
+        }
 
-        val markdown = if (names.isEmpty()) "Bit $id" else "`${names.joinToString(" / ")}` - bit $id\n\n`$map.${document.fixtures[map]}`"
-        return CompletableFuture.completedFuture(Hover(MarkupContent(MarkupKind.MARKDOWN, markdown), bit.range()))
+        /*val command = Trees.findAllRuleNodes(document.tree, BitsmapParser.RULE_bitField)
+            .filterIsInstance<BitsmapParser.BitFieldContext>()
+            .firstNotNullOfOrNull { ctx -> ctx.takeIf { params.position in (it.getChild(0) as ParserRuleContext).range() }}
+        if (command != null) {
+            val value = when {
+                command.flowField() != null -> "Air flow controls"
+                else -> "Command"
+            }
+            return CompletableFuture.completedFuture(Hover(MarkupContent(MarkupKind.MARKDOWN, value), command.range()))
+        }*/
+
+        return CompletableFuture.completedFuture(null)
     }
 }

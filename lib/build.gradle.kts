@@ -10,10 +10,6 @@ plugins {
     `maven-publish`
 }
 
-repositories {
-    mavenCentral()
-}
-
 fun dep(name: String) = (project.property(name) as? String)!!
 dependencies {
     // https://mvnrepository.com/artifact/org.antlr/antlr4
@@ -68,6 +64,14 @@ val buildBitmapFiles = tasks.register<BitmapGeneratorTask>("buildBitmapFiles") {
 sourceSets.main {
     kotlin.srcDir(buildBitmapFiles.map { it.sourceGeneratedDir })
     resources.srcDir(buildBitmapFiles.map { it.bitmapsGeneratedDir })
+}
+
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        showStandardStreams = true
+        events()
+    }
 }
 
 publishing {

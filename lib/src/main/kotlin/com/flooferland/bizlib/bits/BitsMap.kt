@@ -192,9 +192,9 @@ class BitsMap {
 
             // Adding the movements
             for (mappedMovement in ctx.mappedMovement()) {
-                val mapKey = mappedMovement.map().text
-                if (mapKey != "any" && BitUtils.readBitmap(mapKey) == null && BitUtils.readBitmap("${mapKey}_old") == null) {
-                    addError(mappedMovement.map(), "Unknown map '$mapKey'.")
+                val map = mappedMovement.map().text
+                if (map != "any" && BitUtils.readBitmap(map) == null && BitUtils.readBitmap("${map}_old") == null) {
+                    addError(mappedMovement.map(), "Unknown map '$map'.")
                 }
                 val mapping = BitMappingData(
                     flow = flow,
@@ -205,14 +205,14 @@ class BitsMap {
                     type = type,
                     hold = hold,
                     wiggleMul = wiggleMul,
-                    name = fixtureMap[mapKey]
+                    name = fixtureMap[map]
                 )
 
                 val bitCtx = mappedMovement.bit()
                 val moveName = bitCtx.ID()?.text
                 val moveId = BitUtils.parseBitId(bitCtx.text)
                 if (moveName == null && moveId == null) {
-                    addWarn(bitCtx, "No movement id found for mapping $mapKey (please enter a valid bit ID)")
+                    addWarn(bitCtx, "No movement id found for mapping $map (please enter a valid bit ID)")
                     continue
                 }
                 if (moveId != null && moveId !in 1u.toUShort()..BitUtils.DRAWER_MAX) {
@@ -221,37 +221,37 @@ class BitsMap {
                 }
                 if (moveName != null) addWarn(bitCtx, "Name IDs are no longer supported. Use a bit number")
 
-                fun add(mapKey: MappingName, fixtureName: FixtureName? = null) {
+                fun add(readMap: MappingName, fixtureName: FixtureName? = null, writeMap: MappingName = readMap) {
                     val bit = moveId ?: run {
                         // Named bits
-                        val fixtureName = fixtureName ?: fixtureMap[mapKey] ?: run {
-                            addError(bitCtx, "No fixture was specified for the map '${mapKey}'. No idea what bit to map '${moveName}' to.")
+                        val fixtureName = fixtureName ?: fixtureMap[readMap] ?: run {
+                            addError(bitCtx, "No fixture was specified for the map '${readMap}'. No idea what bit to map '${moveName}' to.")
                             return
                         }
-                        val oldBitmapWarn = "A movement from the old bitmap was found being used for '${mapKey}.${fixtureName}'. Please migrate your addon to use numerical bit IDs!"
-                        val fixtures = bitmaps[mapKey]
-                            ?: oldBitmaps[mapKey]?.also { addWarn(bitCtx, oldBitmapWarn) }
+                        val oldBitmapWarn = "A movement from the old bitmap was found being used for '${readMap}.${fixtureName}'. Please migrate your addon to use numerical bit IDs!"
+                        val fixtures = bitmaps[readMap]
+                            ?: oldBitmaps[readMap]?.also { addWarn(bitCtx, oldBitmapWarn) }
                             ?: run {
-                                addError(bitCtx, "No bitmap found for '${mapKey}'. Consider using explicit bitmaps and bit IDs instead of bit names")
+                                addError(bitCtx, "No bitmap found for '${readMap}'. Consider using explicit bitmaps and bit IDs instead of bit names")
                                 return
                             }
 
                         fixtures[fixtureName]?.get(moveName)
-                            ?: oldBitmaps[mapKey]?.get(fixtureName)?.get(moveName)?.also { addWarn(bitCtx, oldBitmapWarn) }
+                            ?: oldBitmaps[readMap]?.get(fixtureName)?.get(moveName)?.also { addWarn(bitCtx, oldBitmapWarn) }
                             ?: run {
                                 addError(bitCtx, "No move with the name '${moveName}' was found for fixture '${fixtureName}'")
                                 return
                             }
                     }
 
-                    val movementsTarget = bitMovements.getOrPut(mapKey) { mutableMapOf() }
+                    val movementsTarget = bitMovements.getOrPut(writeMap) { mutableMapOf() }
                     movementsTarget[bit] = mapping
                 }
-
-                if (mapKey == "any") {  // Adding all maps
-                    fixtureMap.forEach { (mapKey, fixtureName) -> add(mapKey, fixtureName) }
+1
+                if (map == "any") {  // Adding all maps
+                    fixtureMap.forEach { (mapKey, fixtureName) -> add(mapKey, fixtureName, writeMap = "any") }
                 } else {
-                    add(mapKey)
+                    add(map)
                 }
             }
 

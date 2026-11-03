@@ -11,7 +11,7 @@ class BizshwTest : FunSpec({
     context("Convert from an rshw") {
         lateinit var rshowData: RawShowData
         beforeTest {
-            rshowData = RshowFormat().read(Files.newInputStream(Path("D:\\Animatronics\\Creative Engineering\\Show tapes (RR)\\64th Birthday.rshw")))
+            rshowData = RshowFormat().read(Files.newInputStream(Path("D:\\Animatronics\\Show tapes\\64th Birthday.rshw")))
         }
 
         // NOTE: 64th Birthday.rshw is 250 MBs

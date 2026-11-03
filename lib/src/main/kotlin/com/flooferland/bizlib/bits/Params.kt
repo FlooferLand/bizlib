@@ -5,7 +5,7 @@ import org.antlr.v4.runtime.ParserRuleContext
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-typealias ParamFail = (ParserRuleContext, String) -> Unit
+private typealias ParamFail = (ParserRuleContext, String) -> Unit
 
 data class ParamId(val target: Boolean = false, val name: String? = null) {
     companion object {
@@ -43,11 +43,14 @@ abstract class ParamSet(val field: String) {
             val valueCtx = paramCtx.paramValue()
 
             val id = ParamId.from(nameCtx)
-            if (id.name == TARGET) continue
+            if (id.name == TARGET) {
+                fail(nameCtx ?: ctx, "'$TARGET' can't be used directly")
+                continue
+            }
 
             val param = params[id]
             if (param == null) {
-                fail(nameCtx ?: ctx, "Failed to find parameter for name '${nameCtx?.text}' (params.size = ${params.size})")
+                fail(nameCtx ?: ctx, "Failed to find parameter for name '${nameCtx?.text}'")
                 continue
             }
 
@@ -103,19 +106,19 @@ abstract class Param<T>(val name: String) : ReadOnlyProperty<ParamSet, Param<T>>
     abstract val typeName: String
     abstract fun parse(ctx: BitsmapParser.ParamValueContext): T?
 
-    class Num(name: String) : Param<Double>(name) {
+    internal class Num(name: String) : Param<Double>(name) {
         override val typeName = "num"
         override fun parse(ctx: BitsmapParser.ParamValueContext) = ctx.num()?.text?.toDoubleOrNull()
     }
-    class Bool(name: String) : Param<BooleanType>(name) {
+    internal class Bool(name: String) : Param<BooleanType>(name) {
         override val typeName = "bool"
         override fun parse(ctx: BitsmapParser.ParamValueContext) = ctx.BOOLEAN()?.text?.let { BooleanType.from(it) }
     }
-    class Str(name: String) : Param<String>(name) {
+    internal class Str(name: String) : Param<String>(name) {
         override val typeName = "str"
         override fun parse(ctx: BitsmapParser.ParamValueContext) = ctx.STRING()?.text?.removeSurrounding("\"")
     }
-    class FlowType : Param<String>(ParamSet.TARGET) {
+    internal class FlowType : Param<String>(ParamSet.TARGET) {
         override val typeName = "flow_type"
         init {
             nameless()

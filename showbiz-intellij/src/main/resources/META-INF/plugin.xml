@@ -29,6 +29,7 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <fileType name="Bitsmap" language="bitsmap" extensions="bits" implementationClass="com.flooferland.showbiz.BitsmapLanguageType" />
+        <errorHandler implementation="com.intellij.diagnostic.JetBrainsMarketplaceErrorReportSubmitter" />
     </extensions>
 
     <extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">

@@ -8,6 +8,8 @@ import com.flooferland.bizlib.bits.generated.BitsmapParser
 import java.util.concurrent.CompletableFuture
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.tree.ParseTree
+import org.antlr.v4.runtime.tree.TerminalNode
 import org.antlr.v4.runtime.tree.Trees
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
@@ -69,10 +71,9 @@ class BitsMapTextDocumentService : TextDocumentService {
     }
 
     override fun completion(params: CompletionParams): CompletableFuture<Either<List<CompletionItem?>?, CompletionList?>?>? {
-        val document = documents[params.textDocument.uri]
-            ?: return CompletableFuture.completedFuture(Either.forLeft(emptyList()))
+        val document = documents[params.textDocument.uri] ?: return CompletableFuture.completedFuture(Either.forLeft(emptyList()))
 
-        val suggestions = completeAt(document.text, params.position)
+        val suggestions = completeAt(document.text, document.tree, params.position)
         return CompletableFuture.completedFuture(Either.forLeft(suggestions))
     }
 
@@ -86,7 +87,7 @@ class BitsMapTextDocumentService : TextDocumentService {
         return (lineStart + position.character).coerceAtMost(text.length)
     }
 
-    private fun completeAt(text: String, position: Position): List<CompletionItem> {
+    private fun completeAt(text: String, tree: ParseTree, position: Position): List<CompletionItem> {
         val isWord: (Char) -> Boolean = { it.isLetterOrDigit() || it == '-' || it == '_' }
         val offset = getOffset(text, position)
         val before = text.substring(0, offset)
@@ -98,8 +99,31 @@ class BitsMapTextDocumentService : TextDocumentService {
             Position(position.line, position.character + suffix.length),
         )
 
+        val usedBits = Trees.findAllRuleNodes(tree, BitsmapParser.RULE_bitStmt)
+            .filterIsInstance<BitsmapParser.BitStmtContext>()
+            .mapNotNull { stmt ->
+                val tokens = mutableListOf<String>()
+                val queue = ArrayDeque<ParseTree>().apply { add(stmt) }
+                while (queue.isNotEmpty()) {
+                    val current = queue.removeFirst()
+                    if (current is TerminalNode) {
+                        tokens.add(current.text)
+                    } else {
+                        for (i in 0 until current.childCount) {
+                            queue.add(current.getChild(i))
+                        }
+                    }
+                }
+                tokens.firstNotNullOfOrNull { BitUtils.parseBitId(it) }
+            }.toSet()
+
         fun items(labels: List<String>, kind: CompletionItemKind, inserts: Map<String, String> = emptyMap()) = labels
-            .filter { it.startsWith(prefix, ignoreCase = true) || inserts[it]?.startsWith(prefix, ignoreCase = true) == true }
+            .filter { label ->
+                val insert = inserts[label] ?: label
+                val bitId = BitUtils.parseBitId(label) ?: BitUtils.parseBitId(insert)
+                if (bitId != null && bitId in usedBits) return@filter false
+                label.startsWith(prefix, ignoreCase = true) || insert.startsWith(prefix, ignoreCase = true)
+            }
             .map { label ->
                 val insert = inserts[label] ?: label
                 CompletionItem(label).apply {
@@ -218,7 +242,7 @@ class BitsMapTextDocumentService : TextDocumentService {
             nodes.flatMap { node -> (0 until node.childCount).map { node.getChild(it) } }.takeIf { it.isNotEmpty() }
         }.flatten().any { it is BitsmapParser.BitStmtContext && position in it.range() }
 
-        if (!insideBlock && !trimmedPrev.endsWith("{")) {
+        if (!insideBlock || trimmedPrev.endsWith("{")) {
             return CompletableFuture.completedFuture(emptyList())
         }
 

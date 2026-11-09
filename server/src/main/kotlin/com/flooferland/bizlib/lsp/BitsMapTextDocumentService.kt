@@ -110,18 +110,18 @@ class BitsMapTextDocumentService : TextDocumentService {
                 }
             }
 
-        val fieldName = probe.tree.getFieldName()
+        val fieldName = probe.tree.getFieldName(probe.caretLine)
         if (fieldName != null) run {
-            val map = mutableMapOf<String, Boolean>()
             val params = ParamSet.registry[fieldName]?.params ?: return@run
-            for ((id, param) in params) {
-                if (id.target) {
-                    map += param.completionResults.map { Pair(it, false) }
-                } else {
-                    id.name?.let { map[it] = true }
-                }
+            val words = before.dropLast(prefix.length).substringAfterLast('\n').split(' ')
+
+            val targets = params.filterKeys { it.target }.values.flatMap { it.completionResults }
+            if (targets.isNotEmpty() && targets.none { it in words }) {
+                return items(targets, CompletionItemKind.Keyword)
             }
-            return items(map.keys.toList(), CompletionItemKind.Keyword, map.mapValues { if (it.value) "${it.key}:" else it.key })
+
+            val names = params.keys.mapNotNull { it.name }.filter { name -> words.none { it.startsWith("$name:") } }
+            return items(names, CompletionItemKind.Keyword, names.associateWith { "$it:" })
         }
 
         return items(probe.allowedKeywords, CompletionItemKind.Keyword) +

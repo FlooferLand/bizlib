@@ -13,7 +13,7 @@ import org.antlr.v4.runtime.misc.IntervalSet
 import kotlin.collections.orEmpty
 
 class TreeProbe(val service: BitsMapTextDocumentService, beforeCaret: String) {
-    private val caretLine = beforeCaret.count { it == '\n' } + 1
+    val caretLine = beforeCaret.count { it == '\n' } + 1
     private val parser = BitsmapParser(
         CommonTokenStream(BitsmapLexer(CharStreams.fromString(beforeCaret + "\u0001")).apply { removeErrorListeners() })
     ).apply { removeErrorListeners() }

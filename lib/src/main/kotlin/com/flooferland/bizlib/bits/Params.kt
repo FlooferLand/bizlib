@@ -39,8 +39,8 @@ abstract class ParamSet(val field: String) {
         }
 
         for (paramCtx in paramsCtx.namedParam()) {
-            val nameCtx = paramCtx.paramName()
-            val valueCtx = paramCtx.paramValue()
+            val nameCtx: BitsmapParser.ParamNameContext? = paramCtx.paramName()
+            val valueCtx: BitsmapParser.ParamValueContext? = paramCtx.paramValue()
 
             val id = ParamId.from(nameCtx)
             if (id.name == TARGET) {
@@ -54,8 +54,8 @@ abstract class ParamSet(val field: String) {
                 continue
             }
 
-            if (!param.parseSetValue(valueCtx)) {
-                fail(valueCtx, "Failed to parse parameter '${nameCtx?.text}'. Expected type '${param.typeName}'")
+            if (valueCtx == null || !param.parseSetValue(valueCtx)) {
+                fail(valueCtx ?: nameCtx ?: ctx, "Failed to parse parameter '${nameCtx?.text}'. Expected type '${param.typeName}'")
                 continue
             }
         }

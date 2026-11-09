@@ -66,7 +66,7 @@ private fun ATN.reachable(from: List<ATNState>): Followers {
     return Followers(rules, tokens)
 }
 
-fun ParserRuleContext.getFieldName(): String? {
+fun ParserRuleContext.getFieldName(caretLine: Int): String? {
     val suffix = "Field"
     val upward = generateSequence(this) { it.getParent() }
         .mapNotNull { BitsmapParser.ruleNames.getOrNull(it.ruleIndex) }
@@ -77,7 +77,7 @@ fun ParserRuleContext.getFieldName(): String? {
     fun walk(node: ParseTree?) {
         if (node is ParserRuleContext) {
             val name = BitsmapParser.ruleNames.getOrNull(node.ruleIndex)
-            if (name != null && name.endsWith(suffix)) fields.add(node)
+            if (name != null && name.endsWith(suffix) && node.stop?.line == caretLine) fields.add(node)
             for (i in 0 until node.childCount) walk(node.getChild(i))
         }
     }

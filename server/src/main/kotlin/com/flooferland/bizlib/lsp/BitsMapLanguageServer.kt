@@ -21,7 +21,7 @@ class BitsMapLanguageServer : LanguageServer, LanguageClientAware {
     private val textService = BitsMapTextDocumentService()
 
     override fun initialize(params: InitializeParams): CompletableFuture<InitializeResult> {
-        ParamSet.init()
+        runCatching { ParamSet.init() }.exceptionOrNull()?.printStackTrace()
         val capabilities = ServerCapabilities().apply {
             textDocumentSync = Either.forLeft(TextDocumentSyncKind.Full)
             completionProvider = CompletionOptions(false, listOf(".", " ", "\n"))

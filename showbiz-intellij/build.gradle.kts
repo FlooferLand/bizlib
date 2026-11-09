@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.flooferland"
-version = "1.0.2"
+version = "1.0.3"
 
 repositories {
     mavenCentral()
@@ -16,6 +16,7 @@ repositories {
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin.html
 dependencies {
     implementation(project(":server"))
+    implementation(project(":lib"))
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
@@ -26,8 +27,4 @@ dependencies {
 
         plugin("com.redhat.devtools.lsp4ij", "0.19.1")
     }
-}
-
-tasks.jar {
-    from(project(":server").extensions.getByType<SourceSetContainer>()["main"].output)
 }

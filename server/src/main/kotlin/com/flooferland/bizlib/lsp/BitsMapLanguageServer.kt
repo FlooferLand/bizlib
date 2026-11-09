@@ -5,6 +5,7 @@ import java.util.concurrent.CompletableFuture
 import org.eclipse.lsp4j.CompletionOptions
 import org.eclipse.lsp4j.DidChangeConfigurationParams
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams
+import org.eclipse.lsp4j.DocumentOnTypeFormattingOptions
 import org.eclipse.lsp4j.InitializeParams
 import org.eclipse.lsp4j.InitializeResult
 import org.eclipse.lsp4j.SemanticTokensLegend
@@ -29,7 +30,9 @@ class BitsMapLanguageServer : LanguageServer, LanguageClientAware {
                 legend = SemanticTokensLegend(BitsMapHighlightToken.ids, emptyList())
                 full = Either.forLeft(true)
             }
+            documentOnTypeFormattingProvider = DocumentOnTypeFormattingOptions("\n", listOf("{", "}"))
             hoverProvider = Either.forLeft(true)
+            inlayHintProvider = Either.forLeft(true)
         }
         return CompletableFuture.completedFuture(InitializeResult(capabilities))
     }

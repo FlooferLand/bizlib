@@ -156,7 +156,7 @@ class BitsMapTextDocumentService : TextDocumentService {
 
         val mappedMovement = Trees.findAllRuleNodes(document.tree, BitsmapParser.RULE_mappedMovement)
             .filterIsInstance<BitsmapParser.MappedMovementContext>()
-            .firstNotNullOfOrNull { ctx -> ctx.bit().takeIf { params.position in it.range() }?.let { ctx to it } }
+            .firstNotNullOfOrNull { ctx -> ctx.takeIf { params.position in it.range() }?.let { ctx to it.bit() } }
         if (mappedMovement != null) {
             val (movement, bit) = mappedMovement
             val map = movement.map().text
@@ -180,5 +180,55 @@ class BitsMapTextDocumentService : TextDocumentService {
         }*/
 
         return CompletableFuture.completedFuture(null)
+    }
+
+    override fun inlayHint(params: InlayHintParams): CompletableFuture<List<InlayHint>> {
+        val document = documents[params.textDocument.uri] ?: return CompletableFuture.completedFuture(emptyList())
+        val lines = document.text.lines()
+        val hints = Trees.findAllRuleNodes(document.tree, BitsmapParser.RULE_bitStmt)
+            .filterIsInstance<BitsmapParser.BitStmtContext>()
+            .mapNotNull { stmt ->
+                val line = stmt.start.line - 1
+                if (line !in params.range.start.line..params.range.end.line) return@mapNotNull null
+                val label = stmt.mappedMovement().mapNotNull { movement ->
+                    val map = movement.map().text
+                    val movements = document.movements(map, includeOld = true)
+                    val id = BitUtils.parseBitId(movement.bit().text) ?: movements[movement.bit().text]
+                    movements.filterValues { it.toInt() == id?.toInt() }.keys.firstOrNull()
+                }.distinct().joinToString(", ")
+                if (label.isNotEmpty() && '#' !in lines[line]) {
+                    InlayHint(Position(line, lines[line].length), Either.forLeft(label)).apply {
+                        paddingLeft = true
+                    }
+                } else null
+            }
+        return CompletableFuture.completedFuture(hints)
+    }
+
+    override fun onTypeFormatting(params: DocumentOnTypeFormattingParams): CompletableFuture<List<TextEdit>> {
+        val document = documents[params.textDocument.uri] ?: return CompletableFuture.completedFuture(emptyList())
+        val position = params.position
+        if (params.ch != "\n") return CompletableFuture.completedFuture(emptyList())
+
+        val lines = document.text.lines()
+        val prevLine = if (position.line > 0) lines[position.line - 1] else ""
+        val trimmedPrev = prevLine.trim()
+
+        val insideBlock = Trees.findAllRuleNodes(document.tree, BitsmapParser.RULE_bitStmt)
+            .filterIsInstance<BitsmapParser.BitStmtContext>()
+            .any { position in it.range() }
+
+        if (!insideBlock && !trimmedPrev.endsWith("{")) {
+            return CompletableFuture.completedFuture(emptyList())
+        }
+
+        val indent = if (params.options.isInsertSpaces) " ".repeat(params.options.tabSize) else "\t"
+        val prevIndent = prevLine.takeWhile { it == ' ' || it == '\t' }
+        val targetIndent = if (trimmedPrev.endsWith("{")) prevIndent + indent else prevIndent
+
+        val lineStart = Position(position.line, 0)
+        return CompletableFuture.completedFuture(listOf(
+            TextEdit(Range(lineStart, position), targetIndent)
+        ))
     }
 }

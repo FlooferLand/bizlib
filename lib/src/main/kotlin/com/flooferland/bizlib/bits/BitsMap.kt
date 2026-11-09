@@ -7,6 +7,7 @@ import com.flooferland.bizlib.position
 import org.antlr.v4.runtime.*
 import org.antlr.v4.runtime.tree.ParseTree
 import java.io.InputStream
+import org.antlr.v4.runtime.atn.PredictionMode
 
 // TODO: Add thorough error throwing to tell the user why something doesn't work
 
@@ -72,7 +73,6 @@ class BitsMap {
             ctx.position?.let { pos ->
                 val at = LogMessage.Pos(LogMessage.Point(pos.start.line, pos.start.column), LogMessage.Point(pos.end.line, pos.end.column))
                 message.position = at
-                message.context = at.contextAround(raw)
             }
             messages += message
         }
@@ -288,10 +288,13 @@ class BitsMap {
     /** NOTE: Will throw if failed parsing */
     fun load(stream: InputStream): BotBitmapFile {
         val text = stream.bufferedReader().use { it.readText() }
+
         val messages = analyze(text).messages
-        messages.forEach { if (it.severity == Severity.Error) errorCallback(it) else warnHandler(it) }
+        messages.forEach { it.context = it.position?.contextAround(text) }
+
         val errors = messages.filter { it.severity == Severity.Error }
         if (errors.isNotEmpty()) error(errors.joinToString("\n"))
+
         return bitmapFile ?: error("Internal error: ${this::bitmapFile.name} was not filled by the end of the visitor. File may be empty?")
     }
 }

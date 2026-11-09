@@ -7,13 +7,15 @@ import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.tree.Trees
 
 class Document(val tree: ParseTree, val text: String) {
-    val fixtures: Map<String, String> = Trees.findAllRuleNodes(tree, BitsmapParser.RULE_setStmt)
-        .filterIsInstance<BitsmapParser.SetStmtContext>()
-        .mapNotNull { s ->
-            val map = s.map().text
-            s.fixture()?.ID()?.text?.let { map to it }
-        }
-        .toMap()
+    val fixtures: Map<String, String> by lazy {
+        Trees.findAllRuleNodes(tree, BitsmapParser.RULE_setStmt)
+            .filterIsInstance<BitsmapParser.SetStmtContext>()
+            .mapNotNull { s ->
+                val map = s.map().text
+                s.fixture()?.ID()?.text?.let { map to it }
+            }
+            .toMap()
+    }
 
     fun findFixtures(ctx: ParserRuleContext, includeOld: Boolean): List<String> =
         ctx.closest<BitsmapParser.SetStmtContext>()?.map()?.text?.let { map ->

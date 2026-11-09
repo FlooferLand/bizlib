@@ -47,9 +47,12 @@ val ParserRuleContext.isComplete: Boolean
         return exception == null && last !is ErrorNode && ((last as? ParserRuleContext)?.isComplete ?: true)
     }
 
-operator fun Range.contains(pos: Position) =
-    pos.line == start.line
-    && pos.character >= start.character && pos.character < end.character
+operator fun Range.contains(pos: Position): Boolean {
+    if (pos.line < start.line || pos.line > end.line) return false
+    if (pos.line == start.line && pos.character < start.character) return false
+    if (pos.line == end.line && pos.character > end.character) return false
+    return true
+}
 
 private fun ATN.reachable(from: List<ATNState>): Followers {
     val rules = mutableSetOf<Int>()

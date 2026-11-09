@@ -120,6 +120,11 @@ class BitsMap {
             var hold: BooleanType = BooleanType.defaultNo()
             var wiggleMul = 1.0
 
+            val seen = mutableSetOf<String>()
+            fun checkDuplicate(ctx: ParserRuleContext, text: String) {
+                if (!seen.add(text)) addWarn(ctx, "Duplicate '$text', this might replace the earlier ones")
+            }
+
             for (field in ctx.bitField()) {
                 when {
                     field.flowField() != null -> {
@@ -129,6 +134,7 @@ class BitsMap {
                         if (new != null) {
                             if (flow == null) flow = FlowCommand()
                             val params = FlowParams().apply { fill(flowCtx, new, ::fail) }
+                            params.target.value?.let { checkDuplicate(flowCtx, "flow $it") }
                             when (params.target.value) {
                                 "speed" -> {
                                     flow.flowIn = params.valueIn.value
@@ -146,7 +152,7 @@ class BitsMap {
                                     flow.smashInSpeed = params.valueIn.value
                                     flow.smashOutSpeed = params.valueOut.value
                                 }
-                                else -> "Unknown target '${params.target.value}'"
+                                else -> fail(flowCtx, "Unknown target '${params.target.value}'")
                             }
                         } else if (old != null) {
                             oldFlow = OldFlowCommand(
@@ -179,12 +185,16 @@ class BitsMap {
                         )
                     }
                     field.typeField() != null -> {
+                        checkDuplicate(field.typeField()!!, "type")
                         type = MoveType.from(field.typeField()!!.MOVE_TYPE().text)
                     }
                     field.holdField() != null -> {
+                        checkDuplicate(field.holdField()!!, "hold")
                         hold = BooleanType.from(field.holdField()!!.BOOLEAN().text)
                     }
                     field.wiggleMulField() != null -> {
+                        checkDuplicate(field.wiggleMulField()!!, "wigglemul")
+                        addWarn(field.wiggleMulField()!!, "wigglemul is deprecated and replaced by physics.toml")
                         wiggleMul = field.wiggleMulField()!!.num().text.toDoubleOrNull() ?: 0.0
                     }
                 }

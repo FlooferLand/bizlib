@@ -59,6 +59,12 @@ abstract class ParamSet(val field: String) {
                 continue
             }
         }
+
+        for ((id, param) in params) {
+            if (param.value == null && !param.optional && param.default == null) {
+                fail(ctx, "Missing ${id.name ?: "target"} parameter (expected '${param.typeName}')")
+            }
+        }
     }
 
     companion object {
@@ -79,10 +85,12 @@ abstract class ParamSet(val field: String) {
 @Suppress("unused")
 abstract class Param<T>(val name: String) : ReadOnlyProperty<ParamSet, Param<T>> {
     private var nameless = false
-    private var optional = false
-    private var default: T? = null
     var completionResults = listOf<String>()
     var value: T? = null
+    var optional = false
+        private set
+    var default: T? = null
+        private set
 
     fun nameless() = also { nameless = true }
     fun optional() = also { optional = true }

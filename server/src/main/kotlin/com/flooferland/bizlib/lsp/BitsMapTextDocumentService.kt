@@ -214,21 +214,20 @@ class BitsMapTextDocumentService : TextDocumentService {
         val prevLine = if (position.line > 0) lines[position.line - 1] else ""
         val trimmedPrev = prevLine.trim()
 
-        val insideBlock = Trees.findAllRuleNodes(document.tree, BitsmapParser.RULE_bitStmt)
-            .filterIsInstance<BitsmapParser.BitStmtContext>()
-            .any { position in it.range() }
+        val insideBlock = generateSequence(listOf(document.tree)) { nodes ->
+            nodes.flatMap { node -> (0 until node.childCount).map { node.getChild(it) } }.takeIf { it.isNotEmpty() }
+        }.flatten().any { it is BitsmapParser.BitStmtContext && position in it.range() }
 
         if (!insideBlock && !trimmedPrev.endsWith("{")) {
             return CompletableFuture.completedFuture(emptyList())
         }
 
         val indent = if (params.options.isInsertSpaces) " ".repeat(params.options.tabSize) else "\t"
-        val prevIndent = prevLine.takeWhile { it == ' ' || it == '\t' }
+        val prevIndent = prevLine.takeWhile { it.isWhitespace() }
         val targetIndent = if (trimmedPrev.endsWith("{")) prevIndent + indent else prevIndent
-
-        val lineStart = Position(position.line, 0)
+        
         return CompletableFuture.completedFuture(listOf(
-            TextEdit(Range(lineStart, position), targetIndent)
+            TextEdit(Range(Position(position.line, 0), position), targetIndent)
         ))
     }
 }
